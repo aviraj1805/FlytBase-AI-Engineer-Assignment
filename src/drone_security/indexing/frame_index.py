@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import threading
 from datetime import date
 from pathlib import Path
 from typing import Any, Iterable, Optional
@@ -148,8 +149,11 @@ class FrameIndex:
         self.path = str(path)
         if self.path != ":memory:":
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(self.path)
+        # LangGraph executes tool calls on worker threads, so the connection must be shareable;
+        # the lock serialises access because one sqlite3 connection is not safe for concurrent use.
+        self.conn = sqlite3.connect(self.path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
+        self.lock = threading.RLock()
         self.conn.executescript(SCHEMA)
         self.batch_size = batch_size
         self._pending = 0
@@ -220,7 +224,8 @@ class FrameIndex:
         )
 
     def flush(self) -> None:
-        self.conn.commit()
+        with self.lock:
+            self.conn.commit()
         self._pending = 0
 
     def close(self) -> None:
@@ -444,10 +449,12 @@ class FrameIndex:
 
     # ------------------------------------------------------------------ helpers
     def _all(self, sql: str, params: Iterable[Any] = ()) -> list[dict[str, Any]]:
-        return [dict(row) for row in self.conn.execute(sql, tuple(params))]
+        with self.lock:
+            return [dict(row) for row in self.conn.execute(sql, tuple(params))]
 
     def _one(self, sql: str, params: Iterable[Any] = ()) -> Optional[dict[str, Any]]:
-        row = self.conn.execute(sql, tuple(params)).fetchone()
+        with self.lock:
+            row = self.conn.execute(sql, tuple(params)).fetchone()
         return dict(row) if row else None
 
 

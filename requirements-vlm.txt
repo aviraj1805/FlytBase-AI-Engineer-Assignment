@@ -1,6 +1,0 @@
-# Optional: real video ingestion and local (offline) BLIP captioning.
-# Claude vision captioning needs only requirements.txt.
-opencv-python>=4.9
-pillow>=10
-torch>=2.2
-transformers>=4.40

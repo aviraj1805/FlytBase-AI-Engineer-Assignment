@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drone-security-analyst"
+version = "2.0.0"
+description = "Drone Security Analyst Agent: telemetry + frame analysis, real-time alerts, frame index and a grounded Q&A agent"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6",                    # declarative alert rules (config/rules.yaml)
+    "numpy>=1.24",                  # vector maths for semantic retrieval
+    "pydantic>=2.7",                # schemas for Gemini structured output
+    "rich>=13",                     # readable console output for run/demo
+    "matplotlib>=3.7",              # benchmark and evaluation plots
+    "google-genai>=1.0",            # Gemini API (LLM, VLM, embeddings), only used when GEMINI_API_KEY is set
+    "langchain>=1.0,<2.0",          # create_agent tool-calling loop
+    "langgraph>=1.0,<2.0",
+    "langchain-google-genai>=2.0",  # ChatGoogleGenerativeAI for the LangChain agent
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+drone-security = "drone_security.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

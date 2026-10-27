@@ -8,7 +8,7 @@ from datetime import datetime, time
 from pathlib import Path
 from typing import Optional
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  # src/drone_security/config.py -> repo root
 DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config" / "property.json"
 
 

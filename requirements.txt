@@ -1,10 +1,13 @@
-# Core pipeline (simulation, tracking, rules, SQLite/FTS5 index, offline analyst) uses only the
-# Python standard library. These packages add the LLM agent, Claude perception and nicer CLI output.
-anthropic>=1.17,<2.0             # Claude: structured frame analysis, vision captions, summaries
-                                  # (<2.0 because langchain-anthropic 1.x requires anthropic<2)
-langchain>=1.0,<2.0               # create_agent (tool-calling agent loop)
-langchain-anthropic>=1.7.6,<2.0   # ChatAnthropic with effort=, betas=
+# Same dependencies as pyproject.toml, for `pip install -r requirements.txt`.
+# The offline path (parser, tracker, rules, index, offline analyst) needs none of the Gemini/LangChain
+# packages at runtime; they are only imported when GEMINI_API_KEY is set.
+pyyaml>=6
+numpy>=1.24
+pydantic>=2.7
+rich>=13
+matplotlib>=3.7
+google-genai>=1.0
+langchain>=1.0,<2.0
 langgraph>=1.0,<2.0
-pydantic>=2.7               # structured-output schemas
-rich>=13                    # coloured CLI output (optional)
-pytest>=8                   # test suite
+langchain-google-genai>=2.0
+pytest>=8
