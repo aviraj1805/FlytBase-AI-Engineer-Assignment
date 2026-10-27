@@ -21,7 +21,7 @@ import json
 import re
 import sqlite3
 import threading
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -141,6 +141,8 @@ CREATE TABLE IF NOT EXISTS summaries (
 CREATE INDEX IF NOT EXISTS idx_summaries ON summaries(level, period_start);
 """
 
+STORED_VISITS = 30  # visits kept on an entity row (see upsert_entities)
+
 # extra words indexed with each label so natural queries hit ("pickup" -> truck)
 _LABEL_SYNONYMS = {
     "truck": "pickup lorry vehicle", "car": "sedan automobile vehicle", "van": "vehicle delivery",
@@ -169,6 +171,7 @@ class FrameIndex:
             self.conn.executescript(SCHEMA)
         self.batch_size = batch_size
         self._pending = 0
+        self.version = 0  # bumped on every frame write; lets caches (search vectors) know when to refresh
 
     # ================================================================== writes
     def add(self, result: FrameResult, *, late: bool = False) -> None:
@@ -198,6 +201,7 @@ class FrameIndex:
             self._add_events(cur, result.logs)
             self._add_alerts(cur, result.alerts)
         self._pending += 1
+        self.version += 1
         if self._pending >= self.batch_size:
             self.flush()
 
@@ -220,11 +224,14 @@ class FrameIndex:
             a.alert_id = cur.lastrowid
 
     def upsert_entities(self, entities: Iterable) -> None:
+        # Only the latest visits are stored on the entity row (visit_count keeps the total; older visits stay
+        # in the detections and events tables). Re-serialising months of visits on every sighting made
+        # ingest slow down as history grew.
         rows = [
             (e.entity_id, e.signature, e.category, e.label, e.display_name, to_ts(e.first_seen), to_ts(e.last_seen),
              e.last_zone, e.sightings, len(e.visits), round(e.mean_confidence, 3),
              json.dumps([{"start": to_ts(v.start), "end": to_ts(v.end), "zones": v.zones, "frame_ids": v.frame_ids,
-                          "left": v.closed} for v in e.visits]))
+                          "left": v.closed} for v in e.visits[-STORED_VISITS:]]))
             for e in entities
         ]
         with self.lock:
@@ -321,7 +328,8 @@ class FrameIndex:
 
     def alerts(self, *, min_severity: str | int | Severity | None = None, start: TimeLike = None, end: TimeLike = None,
                rule_id: Optional[str] = None, zone: Optional[str] = None, entity_id: Optional[str] = None,
-               limit: int = 500) -> list[dict[str, Any]]:
+               limit: int = 500, latest: bool = False) -> list[dict[str, Any]]:
+        """Alerts in time order; latest=True returns the most recent `limit` ones (still in time order)."""
         self.flush()
         clauses, params = [], []
         if min_severity is not None:
@@ -334,7 +342,10 @@ class FrameIndex:
                 clauses.append(f"{column} = ?")
                 params.append(value)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-        rows = self._all(f"SELECT * FROM alerts {where} ORDER BY ts, alert_id LIMIT ?", (*params, limit))
+        order = "ts DESC, alert_id DESC" if latest else "ts, alert_id"
+        rows = self._all(f"SELECT * FROM alerts {where} ORDER BY {order} LIMIT ?", (*params, limit))
+        if latest:
+            rows.reverse()
         for row in rows:
             row["related_rules"] = json.loads(row["related_rules"] or "[]")
             row["evidence_frame_ids"] = json.loads(row["evidence_frame_ids"] or "[]")
@@ -352,7 +363,8 @@ class FrameIndex:
         return self._all(f"SELECT * FROM events {where} ORDER BY ts, id LIMIT ?", (*params, limit))
 
     def entities(self, *, category: Optional[str] = None, label: Optional[str] = None,
-                 entity_id: Optional[str] = None) -> list[dict[str, Any]]:
+                 entity_id: Optional[str] = None, with_visits: bool = True) -> list[dict[str, Any]]:
+        """Tracked identities; with_visits=False skips the visit history (much faster for matching)."""
         self.flush()
         clauses, params = [], []
         for column, value in (("category", category), ("label", label)):
@@ -363,9 +375,12 @@ class FrameIndex:
             clauses.append("entity_id = ?")
             params.append(entity_id)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-        rows = self._all(f"SELECT * FROM entities {where} ORDER BY visit_count DESC, sightings DESC", params)
-        for row in rows:
-            row["visits"] = json.loads(row["visits"] or "[]")
+        columns = "*" if with_visits else ("entity_id, signature, category, label, display_name, first_seen, last_seen, "
+                                           "last_zone, sightings, visit_count, mean_confidence")
+        rows = self._all(f"SELECT {columns} FROM entities {where} ORDER BY visit_count DESC, sightings DESC", params)
+        if with_visits:
+            for row in rows:
+                row["visits"] = json.loads(row["visits"] or "[]")
         return rows
 
     def object_counts(self, *, start: TimeLike = None, end: TimeLike = None) -> list[dict[str, Any]]:
@@ -410,8 +425,9 @@ class FrameIndex:
             params.append(level)
         start_ts, end_ts = self.time_range(start, end)
         if start_ts:
-            clauses.append("period_end > ?")
-            params.append(start_ts)
+            # no summary spans more than a day, so this lower bound lets the (level, period_start) index do the work
+            clauses += ["period_start >= ?", "period_end > ?"]
+            params += [to_ts(from_ts(start_ts) - timedelta(days=1)), start_ts]
         if end_ts:
             clauses.append("period_start <= ?")
             params.append(end_ts)

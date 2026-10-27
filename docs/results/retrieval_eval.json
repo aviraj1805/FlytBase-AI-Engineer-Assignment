@@ -1,6 +1,6 @@
 {
  "provenance": {
-  "generated_at": "2026-10-28T01:35:22",
+  "generated_at": "2026-10-28T01:47:05",
   "command": "python -m drone_security eval-retrieval",
   "python": "3.10.11",
   "platform": "Windows-10-10.0.26300-SP0",
@@ -37,7 +37,7 @@
      "n": 11
     }
    },
-   "median_latency_ms": 0.11,
+   "median_latency_ms": 0.12,
    "per_query": [
     {
      "query": "blue Ford F150",
@@ -244,7 +244,7 @@
      "n": 11
     }
    },
-   "median_latency_ms": 0.22,
+   "median_latency_ms": 0.11,
    "per_query": [
     {
      "query": "blue Ford F150",
@@ -426,9 +426,9 @@
   },
   "hybrid (BM25 + tfidf)": {
    "overall": {
-    "hit_at_k": 0.844,
+    "hit_at_k": 0.852,
     "mrr": 0.886,
-    "ndcg": 0.839,
+    "ndcg": 0.846,
     "n": 22
    },
    "by_style": {
@@ -445,13 +445,13 @@
      "n": 10
     },
     "paraphrase": {
-     "hit_at_k": 0.742,
+     "hit_at_k": 0.758,
      "mrr": 0.773,
-     "ndcg": 0.72,
+     "ndcg": 0.734,
      "n": 11
     }
    },
-   "median_latency_ms": 0.4,
+   "median_latency_ms": 0.28,
    "per_query": [
     {
      "query": "blue Ford F150",
@@ -529,9 +529,9 @@
      "query": "suspicious bag abandoned near the gate",
      "style": "paraphrase",
      "relevant": 6,
-     "hit_at_k": 0.8333333333333334,
+     "hit_at_k": 1.0,
      "mrr": 1.0,
-     "ndcg": 0.8829374068620365
+     "ndcg": 0.9740298100854945
     },
     {
      "query": "gate left open",
@@ -555,7 +555,7 @@
      "relevant": 3,
      "hit_at_k": 1.0,
      "mrr": 1.0,
-     "ndcg": 0.9066276098484507
+     "ndcg": 0.9217868789962071
     },
     {
      "query": "delivery van",
@@ -571,7 +571,7 @@
      "relevant": 3,
      "hit_at_k": 1.0,
      "mrr": 0.5,
-     "ndcg": 0.6653497124326151
+     "ndcg": 0.7122630665145961
     },
     {
      "query": "security guard",

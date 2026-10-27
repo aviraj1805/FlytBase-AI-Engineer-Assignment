@@ -58,6 +58,18 @@ class _Window:
 Summarizer = Callable[[str, datetime, datetime, list[str]], str]
 
 
+def gemini_summarizer(client) -> Summarizer:
+    """Hour/day summaries written by Gemini from the finer summaries (citations must be kept)."""
+
+    def summarize(level: str, start: datetime, end: datetime, children: list[str]) -> str:
+        span = f"{start:%Y-%m-%d}" if level == "day" else f"{start:%H:%M}-{end:%H:%M}"
+        prompt = (f"Summarise these security-drone notes for the {level} {span} in at most 3 sentences for an operator. "
+                  "Use only these facts, lead with the most serious alert, and keep the [fN] frame citation next to "
+                  "every fact you mention.\n\n" + "\n".join(children))
+        return f"{span}: " + client.text(prompt, purpose=f"summary_{level}")
+    return summarize
+
+
 def estimate_tokens(text: str) -> int:
     """~4 characters per token for English text (used when no tokenizer is available)."""
     return (len(text) + 3) // 4
@@ -294,5 +306,5 @@ def _top_items(items: list, limit: int) -> list:
     return sorted(ranked, key=lambda it: it[0])
 
 
-__all__ = ["HierarchicalMemory", "Summary", "render_from_index", "render_naive", "render_sections", "estimate_tokens",
+__all__ = ["HierarchicalMemory", "Summary", "gemini_summarizer", "render_from_index", "render_naive", "render_sections", "estimate_tokens",
            "property_lines"]

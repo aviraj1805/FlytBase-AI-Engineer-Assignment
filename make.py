@@ -47,8 +47,11 @@ def setup() -> None:
 def evaluate_offline() -> None:
     app("eval", "--seeds", "10")
     app("eval-retrieval")
+    app("ablation")
     app("eval-qa")
     app("eval-qa", "--heldout")
+    if (ROOT / "data" / "eval" / "paraphrases.json").exists():  # created once by eval-gemini
+        app("eval-paraphrase")
 
 
 def evaluate_gemini() -> None:
@@ -56,6 +59,7 @@ def evaluate_gemini() -> None:
     app("vlm")
     app("eval-retrieval", "--gemini")
     app("eval", "--seeds", "3", "--analyzer", "gemini")
+    app("eval-paraphrase", "--make", "--gemini")
     app("eval-qa", "--gemini", "--pause", "1")
     app("eval-qa", "--gemini", "--heldout", "--pause", "1")
 

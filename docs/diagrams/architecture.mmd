@@ -1,0 +1,41 @@
+flowchart LR
+    subgraph Inputs
+        SIM["Scenario generator<br/>day_script.yaml + seed"]
+        TXT["Text feed<br/>'Time: 00:01, Location: Gate, ...'"]
+        IMG["Real images<br/>data/images"]
+    end
+    GT[("ground_truth.json<br/>(never read by the pipeline)")]
+    SIM -.-> GT
+
+    subgraph Edge["Pipeline (offline, deterministic, ~5k frames/s)"]
+        ING["Ingest<br/>validate, de-duplicate,<br/>reorder, quarantine"]
+        PER["Perception<br/>rule parser | Gemini LLM | Gemini VLM"]
+        TRK["Tracker<br/>re-identification + confidence,<br/>visits, dwell"]
+        RUL["Rule engine<br/>config/rules.yaml<br/>cooldown + correlation"]
+        MEM["Hierarchical memory<br/>minute -> hour -> day"]
+    end
+
+    DB[("SQLite index<br/>frames, detections, entities,<br/>events, alerts, summaries<br/>FTS5 + caption vectors")]
+
+    subgraph Analyst
+        TOOLS["5 tools<br/>query_frames, entity_history,<br/>list_alerts, summarize_window,<br/>drone_status"]
+        AG["LangChain agent (Gemini)<br/>or offline router"]
+        GRD["Citation check<br/>[fN] must be retrieved"]
+    end
+
+    OUT["Operator<br/>live alerts, Q&A,<br/>summary, briefing"]
+    EVAL["Evaluation<br/>P/R/F1, retrieval, Q&A,<br/>ablations, benchmark"]
+
+    SIM --> ING
+    TXT --> ING
+    IMG --> PER
+    ING --> PER --> TRK --> RUL
+    TRK --> DB
+    RUL --> DB
+    PER --> DB
+    RUL --> MEM --> DB
+    RUL -- real-time alerts --> OUT
+    DB --> TOOLS --> AG --> GRD --> OUT
+    MEM -- working memory --> AG
+    DB --> EVAL
+    GT --> EVAL

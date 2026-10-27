@@ -1,0 +1,218 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T01:46:47",
+  "command": "python -m drone_security benchmark",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "sizes": [
+  10000,
+  50000,
+  100000,
+  200000
+ ],
+ "repeats": 30,
+ "rows": [
+  {
+   "frames": 10000,
+   "days": 16,
+   "generate_s": 0.27,
+   "ingest_s": 1.58,
+   "ingest_fps": 6310,
+   "detections": 1695,
+   "entities": 148,
+   "alerts": 296,
+   "raw_rule_firings": 1061,
+   "db_mb": 4.9,
+   "unique_captions": 129,
+   "vector_fit_s": 0.02,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 0.58,
+     "p95_ms": 0.625
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.038,
+     "p95_ms": 0.06
+    },
+    "object + zone + time": {
+     "p50_ms": 0.079,
+     "p95_ms": 0.107
+    },
+    "entity history (F150)": {
+     "p50_ms": 0.503,
+     "p95_ms": 0.562
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 0.516,
+     "p95_ms": 0.561
+    },
+    "full text (BM25)": {
+     "p50_ms": 0.192,
+     "p95_ms": 0.221
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 0.439,
+     "p95_ms": 0.459
+    },
+    "summaries for one day": {
+     "p50_ms": 0.086,
+     "p95_ms": 0.116
+    }
+   },
+   "context_tokens_hierarchical": 2376,
+   "context_tokens_naive": 339316
+  },
+  {
+   "frames": 50000,
+   "days": 78,
+   "generate_s": 1.17,
+   "ingest_s": 9.26,
+   "ingest_fps": 5400,
+   "detections": 8431,
+   "entities": 676,
+   "alerts": 1474,
+   "raw_rule_firings": 5256,
+   "db_mb": 24.1,
+   "unique_captions": 129,
+   "vector_fit_s": 0.08,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 0.571,
+     "p95_ms": 0.746
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.035,
+     "p95_ms": 0.045
+    },
+    "object + zone + time": {
+     "p50_ms": 0.079,
+     "p95_ms": 0.099
+    },
+    "entity history (F150)": {
+     "p50_ms": 1.381,
+     "p95_ms": 1.48
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 0.514,
+     "p95_ms": 0.582
+    },
+    "full text (BM25)": {
+     "p50_ms": 0.573,
+     "p95_ms": 0.664
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 0.88,
+     "p95_ms": 1.162
+    },
+    "summaries for one day": {
+     "p50_ms": 0.078,
+     "p95_ms": 0.092
+    }
+   },
+   "context_tokens_hierarchical": 2226,
+   "context_tokens_naive": 1707106
+  },
+  {
+   "frames": 100000,
+   "days": 155,
+   "generate_s": 2.32,
+   "ingest_s": 19.22,
+   "ingest_fps": 5202,
+   "detections": 16885,
+   "entities": 1334,
+   "alerts": 2941,
+   "raw_rule_firings": 10457,
+   "db_mb": 48.2,
+   "unique_captions": 129,
+   "vector_fit_s": 0.16,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 0.57,
+     "p95_ms": 0.748
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.036,
+     "p95_ms": 0.039
+    },
+    "object + zone + time": {
+     "p50_ms": 0.08,
+     "p95_ms": 0.106
+    },
+    "entity history (F150)": {
+     "p50_ms": 2.348,
+     "p95_ms": 2.533
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 0.515,
+     "p95_ms": 0.544
+    },
+    "full text (BM25)": {
+     "p50_ms": 3.46,
+     "p95_ms": 3.844
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 3.835,
+     "p95_ms": 4.014
+    },
+    "summaries for one day": {
+     "p50_ms": 0.105,
+     "p95_ms": 0.118
+    }
+   },
+   "context_tokens_hierarchical": 2678,
+   "context_tokens_naive": 3416763
+  },
+  {
+   "frames": 200000,
+   "days": 310,
+   "generate_s": 4.71,
+   "ingest_s": 40.2,
+   "ingest_fps": 4976,
+   "detections": 33755,
+   "entities": 2646,
+   "alerts": 5883,
+   "raw_rule_firings": 20915,
+   "db_mb": 96.5,
+   "unique_captions": 129,
+   "vector_fit_s": 0.31,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 0.579,
+     "p95_ms": 0.634
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.037,
+     "p95_ms": 0.045
+    },
+    "object + zone + time": {
+     "p50_ms": 0.081,
+     "p95_ms": 0.101
+    },
+    "entity history (F150)": {
+     "p50_ms": 7.295,
+     "p95_ms": 8.036
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 0.515,
+     "p95_ms": 0.607
+    },
+    "full text (BM25)": {
+     "p50_ms": 6.799,
+     "p95_ms": 7.135
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 7.2,
+     "p95_ms": 7.677
+    },
+    "summaries for one day": {
+     "p50_ms": 0.094,
+     "p95_ms": 0.119
+    }
+   },
+   "context_tokens_hierarchical": 2442,
+   "context_tokens_naive": 6862855
+  }
+ ]
+}

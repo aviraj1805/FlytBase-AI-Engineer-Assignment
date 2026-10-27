@@ -1,6 +1,6 @@
 # Scenario evaluation (rules analyzer)
 
-Produced by `python -m drone_security eval --seeds 10 --analyzer rules` on 2026-10-28 01:35. Raw data: `eval_scenario_rules.json`.
+Produced by `python -m drone_security eval --seeds 10 --analyzer rules` on 2026-10-28 01:47. Raw data: `eval_scenario_rules.json`.
 
 Ground truth: 20 scripted alert incidents and per-frame object labels (data/scenarios/day_script.yaml). Seeds change caption paraphrases, GPS jitter and wind.
 

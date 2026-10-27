@@ -1,63 +1,66 @@
-# Feature Spec: Drone Security Analyst Agent
+# Feature specification: Drone Security Analyst Agent
 
-## Summary
+## Problem
 
-A security analyst that runs alongside a docked patrol drone. It watches every frame the drone captures, knows the property (zones, schedules, known vehicles), remembers what it has seen across the day, alerts the moment something needs a human, and answers the owner's questions in plain language.
+A docked drone patrols one property every day and records hours of footage plus telemetry.
+Nobody watches it. Incidents are discovered late or not at all, and when an owner asks
+"did that blue truck come back?" the answer is hidden in thousands of frames.
 
-**Value to property owners: it turns hours of patrol footage into a handful of decisions.** Today a docked drone produces footage that nobody watches until after an incident. The agent watches all of it, raises only what matters (with what to do about it), and makes the rest searchable: "did that truck come back?", "what happened at the gate last night?".
+## Value
 
-## Users and jobs
+The agent turns a day of drone footage into **a handful of explained alerts, a searchable
+record and an analyst that answers questions with evidence**:
 
-| User | Job to be done |
-|---|---|
-| Property owner / manager | Know immediately when something needs action; get a short daily briefing; check on a specific vehicle or visitor |
-| Security operator (remote, often covering many sites) | Triage alerts quickly with context and a recommended action; search footage without scrubbing video |
-| Drone operations | Know when the drone itself is unsafe (battery, geofence, wind, altitude) |
+* **For the property owner / guard:** real-time alerts for what matters (intrusion,
+  loitering, after-hours visitors, unattended items, open gates), each with a plain-English
+  reason and the frames that prove it, instead of a raw video stream.
+* **For the investigator:** "show all truck events", "what happened between 23:00 and
+  23:30", "did the same F150 come back?" answered in milliseconds from a frame index, with
+  identities tracked across the day.
+* **For the drone operator (FlytBase's customer):** flight-safety alerts on the same
+  channel (battery, geofence, GPS drift, altitude, wind), so security and drone health are
+  monitored together.
+
+Measured on the scripted day (docs/results): 20 of 20 incidents alerted with no false
+alerts on the development captions; 19 alerts instead of 67 raw rule firings; prompt
+context of ~2.4k tokens for 200,000 frames instead of 6.9M.
 
 ## Key requirements
 
-### R1: Real-time, actionable alerts
+### R1. Real-time, explainable alerts (must)
+* Rules are declared in `config/rules.yaml` (no code change to add or tune one).
+* Each alert carries severity, rule id, timestamp, **evidence frame ids** and an
+  **explanation** generated from the exact conditions that fired.
+* Noise control: cooldown per rule and entity/zone, correlation of overlapping rules for one
+  entity, escalation passes the cooldown.
+* Alerts never depend on the network: parsing, tracking and rules run offline.
 
-The agent must evaluate every frame against predefined security and flight-safety rules and raise an alert within the same processing step.
+**Acceptance:** every scripted incident in `day_script.yaml` is alerted inside its window;
+benign traps (uniformed guard at night, whitelisted car, short visitor, workers in hours)
+raise nothing. Verified by `tests/test_scenario.py` and `python -m drone_security eval`.
 
-- Security: suspicious behaviour (climbing, tampering, masked, break-in tools), loitering (described or measured by dwell time), people at night (higher severity at the perimeter), people in restricted zones after hours, unrecognised vehicles at night, the same vehicle entering repeatedly, gates/doors left open after hours.
-- Flight safety: low/critical battery, geofence breach, below minimum patrol altitude, wind above the safe limit.
-- Every alert carries severity, time, zone, the entity involved and a **recommended action**.
-- Noise control: repeats suppressed by cooldown, overlapping rules merged into one alert, whitelisted vehicles and uniformed staff never alert.
+### R2. Frame-by-frame index queryable by time, object, zone, entity and text (must)
+* SQLite with tables for frames, detections, entities, events, alerts, summaries; B-tree
+  indexes on (label, ts), (zone, ts), (entity, ts); FTS5 full text over captions plus
+  analyzer tags; optional caption vectors for semantic search.
+* Robust to messy feeds: duplicates, out-of-order and late frames, missing telemetry,
+  malformed records.
 
-Acceptance: "Person loitering at main gate, 00:01." raises a HIGH alert; the same person at 12:00 raises nothing; the owner's own car at 04:50 raises nothing.
+**Acceptance:** "show all truck events" returns every truck detection with its entity; query
+latency stays in milliseconds at 200k frames (docs/results/benchmark.md).
 
-### R2: Memory of who and what, queryable frame by frame
+### R3. Grounded analyst with whole-video context (must)
+* Tools: `query_frames`, `entity_history`, `list_alerts`, `summarize_window`, `drone_status`.
+* Answers cite frames as `[fN]`; citations are checked against what the tools returned; when
+  the evidence is not there the answer is "Not enough evidence".
+* Hierarchical memory (10-minute -> hour -> day summaries) keeps the prompt small however
+  long the footage is; follow-up questions keep conversation history.
+* Bonus: one-sentence video summary and a daily security briefing.
 
-Every frame must be logged with context and indexed so it can be found later by time, object, zone, identity or free text.
+**Acceptance:** fixed question set in `data/eval/qa_questions.yaml` (plus a held-out set)
+scored automatically; unanswerable questions must abstain.
 
-- Detections are structured (category, label, colour, make/model, clothing, carried items, action, zone).
-- Entities are re-identified across frames ("Blue Ford F150" is one identity with three visits, not seven unrelated detections).
-- Logs record changes ("Blue Ford F150 spotted at garage, 12:00."), not every frame.
-- Index queries: "show all truck events", "people at the main gate between 00:00 and 06:00", full-text "masked fence".
+## Out of scope (prototype)
 
-Acceptance: "show all truck events" returns the 7 F150 detections; "how many times did the blue F150 enter?" returns 3 visits with times.
-
-### R3: An analyst you can talk to
-
-The agent must answer follow-up questions grounded in the indexed footage, summarise the day, and recommend actions.
-
-- One-sentence video summary plus highlights.
-- Multi-turn Q&A with follow-ups ("when did *it* leave?").
-- Prioritised recommendations: P1 act now, P2 verify today, P3 harden the site or the patrol.
-- Works with no network (deterministic analyst), and with Claude when available.
-
-Acceptance: "What objects were in the video?" lists vehicles, people, animals, objects and open access points with counts.
-
-## Non-functional requirements
-
-| | Target | Prototype |
-|---|---|---|
-| Latency per frame (deterministic path) | < 50 ms | ~0.3 ms (3,000+ frames/s) |
-| Index query latency | < 100 ms | < 1 ms structured, ~40 ms full-text at 100k frames |
-| Runs offline on dock hardware | required for alerting | core is standard-library Python |
-| Degrades gracefully | LLM failure must not stop alerts | every LLM component has a deterministic fallback |
-
-## Out of scope for the prototype
-
-Licence-plate recognition, face recognition / identity whitelisting, multi-drone coordination, push notifications (SMS/app), and a web dashboard. The architecture leaves room for each (see [ARCHITECTURE.md](ARCHITECTURE.md#scaling-beyond-the-prototype)).
+Licence-plate and face recognition, multi-drone coordination, live video decoding, a web UI,
+notification delivery (SMS/push). The design leaves room for each (see REPORT, "With more time").

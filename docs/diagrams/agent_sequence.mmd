@@ -1,0 +1,27 @@
+sequenceDiagram
+    actor Op as Operator
+    participant SA as SecurityAnalyst
+    participant AG as LangChain agent (Gemini)
+    participant TK as Toolkit (5 tools)
+    participant DB as SQLite index
+    participant GC as Citation check
+
+    Op->>SA: "How many times did the blue Ford F150 enter today?"
+    SA->>AG: question + history<br/>(system prompt holds the day/hour summaries)
+    AG->>TK: entity_history("blue Ford F150")
+    TK->>DB: match entities, load visits + alerts
+    DB-->>TK: V-002: 2 visits, frames 256..270 and 454..466
+    TK-->>AG: JSON with frame ids
+    AG-->>SA: "Twice: 09:14 [f256] and 16:45 [f454]."
+    SA->>GC: cited {256, 454} subset of retrieved ids?
+    GC-->>SA: grounded (no unsupported citations)
+    SA-->>Op: answer + tool calls
+    Op->>SA: "When did it leave?"
+    Note over SA,AG: history kept, "it" = the F150
+    SA->>AG: follow-up
+    AG->>TK: entity_history("blue Ford F150")
+    AG-->>Op: "09:42 [f270] and 17:10 [f466]."
+    alt Gemini unavailable (no key, quota, network)
+        SA->>TK: offline router: same tools, same citations
+        TK-->>Op: deterministic answer, or "Not enough evidence"
+    end

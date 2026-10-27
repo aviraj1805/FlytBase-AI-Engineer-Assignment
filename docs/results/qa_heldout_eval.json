@@ -1,6 +1,6 @@
 {
  "provenance": {
-  "generated_at": "2026-10-28T01:35:24",
+  "generated_at": "2026-10-28T01:47:13",
   "command": "python -m drone_security eval-qa (qa_heldout.yaml)",
   "python": "3.10.11",
   "platform": "Windows-10-10.0.26300-SP0",
@@ -116,7 +116,7 @@
      "id": "H05",
      "scope": "window",
      "question": "Was any vehicle parked at the warehouse in the late morning?",
-     "answer": "Not enough evidence in the footage to answer that. No frame matches all of the words; the closest partial matches are:\n  - 06:06 [warehouse] Warehouse loading bay quiet [f173]\n  - 08:40 [warehouse] Warehouse loading bay quiet [f239]\n  - 09:58 [warehouse] Warehouse loading bay quiet [f278]\n  - 07:42 [warehouse] Warehouse doors shut, no activity [f210]\n  - 09:08 [warehouse] Warehouse doors shut, no activity [f253]",
+     "answer": "Not enough evidence in the footage to answer that. No frame matches all of the words; the closest partial matches are:\n  - 06:06 [warehouse] Warehouse loading bay quiet [f173]\n  - 09:58 [warehouse] Warehouse loading bay quiet [f278]\n  - 08:40 [warehouse] Warehouse loading bay quiet [f239]\n  - 07:42 [warehouse] Warehouse doors shut, no activity [f210]\n  - 11:38 [warehouse] Warehouse doors shut, no activity [f314]",
      "correct": false,
      "latency_s": 0.01,
      "prompt_tokens": 0,
@@ -126,8 +126,8 @@
       173,
       210,
       239,
-      253,
-      278
+      278,
+      314
      ],
      "unsupported_citations": []
     },
@@ -211,7 +211,7 @@
      "id": "H09",
      "scope": "whole day",
      "question": "Which zones are on the property?",
-     "answer": "Not enough evidence in the footage to answer that. No frame matches all of the words; the closest partial matches are:\n  - 02:15 [warehouse] Masked person in black jacket running toward the warehouse [f68]\n  - 22:45 [main gate] Main gate left open, no one around [f611]\n  - 23:06 [main gate] Main gate standing open, no one around [f621]\n  - 23:30 [main gate] Main gate standing open, no one around [f632]\n  - 02:16 [warehouse] Masked person in black jacket prying at the warehouse side door [f69]",
+     "answer": "Not enough evidence in the footage to answer that. No frame matches all of the words; the closest partial matches are:\n  - 02:15 [warehouse] Masked person in black jacket running toward the warehouse [f68]\n  - 22:45 [main gate] Main gate left open, no one around [f611]\n  - 23:30 [main gate] Main gate standing open, no one around [f632]\n  - 23:06 [main gate] Main gate standing open, no one around [f621]\n  - 02:16 [warehouse] Masked person in black jacket prying at the warehouse side door [f69]",
      "correct": false,
      "latency_s": 0.0,
      "prompt_tokens": 0,

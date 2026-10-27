@@ -143,7 +143,7 @@ class HybridRetriever:
         self._kind = mode
         self._captions: list[str] = []
         self._frames_by_caption: dict[str, list[dict]] = {}
-        self._indexed_frames = -1
+        self._indexed_version = -1
 
     def search(self, text: str, *, start: TimeLike = None, end: TimeLike = None, zone: Optional[str] = None,
                limit: int = 10) -> list[dict]:
@@ -170,18 +170,22 @@ class HybridRetriever:
         for i in np.argsort(-scores):
             if scores[i] <= 0 or len(out) >= limit:
                 break
-            for frame in self._frames_by_caption[self._captions[i]]:
+            # a caption repeated on many days maps to many frames: take the newest matching ones only
+            taken = 0
+            for frame in reversed(self._frames_by_caption[self._captions[i]]):
+                if taken >= limit:
+                    break
                 if (start_ts and frame["ts"] < start_ts) or (end_ts and frame["ts"] > end_ts):
                     continue
                 if zone and frame["zone"] != zone_id(zone):
                     continue
                 out.append({**frame, "score": float(scores[i])})
+                taken += 1
         return out[:limit]
 
     def _refresh(self) -> None:
         """(Re)fit on the unique captions whenever new frames were indexed."""
-        count = self.index.stats()["frames"]
-        if count == self._indexed_frames:
+        if self.index.version == self._indexed_version:
             return
         by_caption: dict[str, list[dict]] = defaultdict(list)
         for row in self.index._all("SELECT frame_id, ts, zone, description FROM frames ORDER BY ts, frame_id"):
@@ -189,7 +193,7 @@ class HybridRetriever:
         self._frames_by_caption = dict(by_caption)
         self._captions = list(by_caption)
         self.embedder.fit(self._captions)
-        self._indexed_frames = count
+        self._indexed_version = self.index.version
 
 
 def rrf(rankings: list[list[dict]], k: int = RRF_K) -> list[dict]:

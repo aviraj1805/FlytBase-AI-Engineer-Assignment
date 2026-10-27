@@ -1,0 +1,19 @@
+flowchart TD
+    R["Raw record<br/>{frame_id, timestamp, description, telemetry}"] --> V{"Valid id, time,<br/>caption?"}
+    V -- no --> Q["Quarantine<br/>(reason kept)"]
+    V -- yes --> D{"Seen before?<br/>(id or time+caption)"}
+    D -- yes --> X["Drop duplicate"]
+    D -- no --> H["Reorder buffer<br/>(min-heap, 8 frames)"]
+    H --> W{"Older than the<br/>watermark?"}
+    W -- yes --> LATE["Index only<br/>(searchable, flagged late)"]
+    W -- no --> P["Perception<br/>caption -> detections<br/>(category, label, colour, make,<br/>model, clothing, action, zone)"]
+    P --> T["Tracker<br/>similarity vs known entities<br/>-> entity id + confidence,<br/>visit, dwell, evidence frames"]
+    T --> L["Event log<br/>'Blue Ford F150 spotted at garage, 12:00.'"]
+    T --> E["Rule engine<br/>detection + telemetry conditions"]
+    E --> C["Cooldown + correlation"]
+    C --> A["Alert<br/>severity, rule id, time,<br/>evidence frames, explanation"]
+    P --> I[("SQLite + FTS5")]
+    L --> I
+    A --> I
+    A --> M["Memory windows<br/>10-min -> hour -> day<br/>summaries with [fN]"]
+    M --> I

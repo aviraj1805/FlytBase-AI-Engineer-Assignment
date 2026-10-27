@@ -4,9 +4,9 @@
 
 | method | hit@10 (norm.) | MRR | nDCG@10 | nDCG category (n=1) | nDCG exact (n=10) | nDCG paraphrase (n=11) | median latency ms |
 |---|---|---|---|---|---|---|---|
-| keyword (FTS5/BM25) | 0.795 | 0.909 | 0.822 | 1.0 | 0.863 | 0.768 | 0.11 |
-| semantic (tfidf) | 0.742 | 0.864 | 0.768 | 0.564 | 0.928 | 0.641 | 0.22 |
-| hybrid (BM25 + tfidf) | 0.844 | 0.886 | 0.839 | 0.852 | 0.969 | 0.72 | 0.4 |
+| keyword (FTS5/BM25) | 0.795 | 0.909 | 0.822 | 1.0 | 0.863 | 0.768 | 0.12 |
+| semantic (tfidf) | 0.742 | 0.864 | 0.768 | 0.564 | 0.928 | 0.641 | 0.11 |
+| hybrid (BM25 + tfidf) | 0.852 | 0.886 | 0.846 | 0.852 | 0.969 | 0.734 | 0.28 |
 
 ## Per query (nDCG@10)
 
@@ -21,12 +21,12 @@
 | break-in at the warehouse | paraphrase | 0.00 | 0.00 | 0.00 |
 | masked intruder | paraphrase | 1.00 | 1.00 | 1.00 |
 | parcel left at the front door | paraphrase | 0.47 | 0.47 | 0.47 |
-| suspicious bag abandoned near the gate | paraphrase | 0.98 | 0.88 | 0.88 |
+| suspicious bag abandoned near the gate | paraphrase | 0.98 | 0.88 | 0.97 |
 | gate left open | exact | 0.64 | 1.00 | 1.00 |
 | warehouse door open | exact | 1.00 | 1.00 | 1.00 |
-| dark SUV arriving with its lights off | paraphrase | 1.00 | 0.70 | 0.91 |
+| dark SUV arriving with its lights off | paraphrase | 1.00 | 0.70 | 0.92 |
 | delivery van | exact | 1.00 | 1.00 | 1.00 |
-| wild animals in the garden | paraphrase | 1.00 | 0.00 | 0.67 |
+| wild animals in the garden | paraphrase | 1.00 | 0.00 | 0.71 |
 | security guard | exact | 0.77 | 1.00 | 1.00 |
 | man carrying a ladder | exact | 1.00 | 1.00 | 1.00 |
 | workers using a forklift | paraphrase | 1.00 | 1.00 | 1.00 |

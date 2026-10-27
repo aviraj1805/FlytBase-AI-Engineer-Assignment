@@ -124,6 +124,7 @@ class RuleEngine:
         self.rules = rules if rules is not None else load_rules(path)
         self._by_id = {r.id: r for r in self.rules}
         self._last_fired: dict[str, tuple[datetime, Severity]] = {}
+        self.correlate = True  # the noise-control ablation switches this off
         self.raised_before_noise_control = 0
         self.suppressed = 0
 
@@ -147,7 +148,8 @@ class RuleEngine:
         # alerts absorbed by correlation still count as raised, so they don't resurface next frame
         for alert in fresh:
             self._last_fired[alert.dedupe_key] = (alert.timestamp, alert.severity)
-        return sorted(self._correlate(fresh), key=lambda a: a.severity, reverse=True)
+        alerts = self._correlate(fresh) if self.correlate else fresh
+        return sorted(alerts, key=lambda a: a.severity, reverse=True)
 
     # ------------------------------------------------------------------ alert building
     def _detection_alert(self, rule: Rule, ctx: RuleContext, det: Detection, upd: TrackUpdate,

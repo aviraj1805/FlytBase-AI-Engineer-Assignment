@@ -9,6 +9,8 @@
   context    print the agent's hierarchical working memory
   eval       score the pipeline against ground truth over several seeds
   eval-retrieval  keyword vs semantic vs hybrid search on labelled queries
+  ablation   re-ID under degraded perception (vs the v1 matcher); noise control on/off
+  eval-paraphrase  held-out wording: parser vs Gemini analyzer on Gemini-reworded captions
   eval-qa    context experiment: naive prompt vs hierarchical memory vs ablations
   vlm        Gemini VLM on the real images in data/images, scored against hand labels
   benchmark  scalability: 10k / 50k / 100k / 200k frames
@@ -94,7 +96,13 @@ def cmd_run(args) -> int:
     reset_db(db)
     index = FrameIndex(db)
     analyzer = make_analyzer(args.analyzer, config)
-    pipeline = SecurityPipeline(config, analyzer=analyzer, index=index)
+    memory = None
+    if args.gemini_summaries:
+        from .gemini import GeminiClient
+        from .memory import HierarchicalMemory, gemini_summarizer
+
+        memory = HierarchicalMemory(config, index=index, summarizer=gemini_summarizer(GeminiClient()))
+    pipeline = SecurityPipeline(config, analyzer=analyzer, index=index, memory=memory)
     records = read_records(feed)
     if hasattr(analyzer, "prefetch"):
         from .ingest import FeedSanitizer
@@ -266,6 +274,34 @@ def cmd_eval_retrieval(args) -> int:
     return 0
 
 
+def cmd_ablation(args) -> int:
+    from .evaluation.ablation import run_noise_ablation, run_reid_ablation, write_ablation_report
+
+    config = PropertyConfig.load(args.config)
+    path = write_ablation_report(run_reid_ablation(config), run_noise_ablation(config), RESULTS)
+    out(path.read_text(encoding="utf-8"))
+    return 0
+
+
+def cmd_eval_paraphrase(args) -> int:
+    from .evaluation.paraphrase_eval import PARAPHRASES, make_paraphrases, run_paraphrase_eval, write_paraphrase_report
+
+    config = PropertyConfig.load(args.config)
+    if args.make:
+        from .gemini import GeminiClient
+
+        mapping = make_paraphrases(GeminiClient(), config)
+        out(f"{len(mapping)} captions reworded -> {PARAPHRASES}")
+    if not PARAPHRASES.exists():
+        sys.exit(f"No reworded captions yet ({PARAPHRASES}); create them once with --make (needs GEMINI_API_KEY).")
+    analyzers = {"rules": None}
+    if args.gemini:
+        analyzers["gemini"] = lambda: make_analyzer("gemini", config)
+    path = write_paraphrase_report(run_paraphrase_eval(config, analyzers), RESULTS)
+    out(path.read_text(encoding="utf-8"))
+    return 0
+
+
 def cmd_eval_qa(args) -> int:
     from .evaluation.qa_eval import HELDOUT, QUESTIONS, run_qa_eval, write_qa_report
 
@@ -410,6 +446,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("run", help="process a feed as a live stream")
     p.add_argument("--feed", default=str(DEFAULT_FEED), help=".jsonl records or the brief's .txt line format")
     p.add_argument("--analyzer", choices=["rules", "gemini"], default="rules")
+    p.add_argument("--gemini-summaries", action="store_true", help="Gemini writes the hour and day summaries")
     p.add_argument("--verbose", "-v", action="store_true", help="also print every frame with its telemetry")
     p.add_argument("--explain", action="store_true", help="print each alert's explanation and evidence")
     p.add_argument("--quiet", "-q", action="store_true", help="only print the final statistics")
@@ -456,6 +493,14 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("eval-retrieval", help="keyword vs semantic vs hybrid retrieval on labelled queries")
     p.add_argument("--gemini", action="store_true", help="also evaluate Gemini embeddings")
     p.set_defaults(func=cmd_eval_retrieval)
+
+    p = sub.add_parser("ablation", help="re-ID and noise-control ablations")
+    p.set_defaults(func=cmd_ablation)
+
+    p = sub.add_parser("eval-paraphrase", help="held-out wording experiment")
+    p.add_argument("--make", action="store_true", help="have Gemini reword the captions first (saved for offline re-runs)")
+    p.add_argument("--gemini", action="store_true", help="also score the Gemini analyzer")
+    p.set_defaults(func=cmd_eval_paraphrase)
 
     p = sub.add_parser("eval-qa", help="context-management experiment on a fixed question set")
     p.add_argument("--gemini", action="store_true", help="run the Gemini conditions (needs GEMINI_API_KEY)")

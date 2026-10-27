@@ -23,6 +23,7 @@ from itertools import combinations
 from typing import Optional
 
 from ..config import PropertyConfig
+from ..ingest import FeedSanitizer
 from ..models import Alert, FrameResult
 from ..pipeline import SecurityPipeline
 from ..scenario import generate_day, load_script
@@ -41,9 +42,12 @@ class ScenarioRun:
 def run_scenario(config: PropertyConfig, *, seed: int = 7, analyzer=None, script: Optional[dict] = None,
                  records: Optional[list[dict]] = None) -> ScenarioRun:
     day = generate_day(script or load_script(), config, seed=seed)
+    feed = records if records is not None else day.records
+    if hasattr(analyzer, "prefetch"):  # LLM analyzers: a few batched requests instead of one per caption
+        analyzer.prefetch(list(FeedSanitizer(config).process(feed)))
     pipeline = SecurityPipeline(config, analyzer=analyzer)
     results: list[FrameResult] = []
-    stats = pipeline.run(records if records is not None else day.records, on_result=results.append)
+    stats = pipeline.run(feed, on_result=results.append)
     return ScenarioRun(seed, results, day.ground_truth, pipeline, stats.fps)
 
 

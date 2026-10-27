@@ -61,8 +61,9 @@ class AnalystToolkit:
         if not matches:
             return {"description": description, "found": False}
         reports = []
-        for e in matches[:3]:
-            alerts = self.index.alerts(entity_id=e["entity_id"])
+        for light in matches[:3]:
+            e = self.index.entities(entity_id=light["entity_id"])[0]  # full row with visit history
+            alerts = self.index.alerts(entity_id=e["entity_id"], limit=20, latest=True)  # months of history: recent ones
             reports.append({
                 "entity_id": e["entity_id"], "name": e["display_name"], "category": e["category"],
                 "visit_count": e["visit_count"], "sightings": e["sightings"],
@@ -149,14 +150,14 @@ class AnalystToolkit:
         if parsed:
             d = parsed[0]
             wanted = [v.lower() for v in (d.color, d.make, d.model) if v] + [a for a in d.attributes]
-            for e in self.index.entities(category=d.category):
+            for e in self.index.entities(category=d.category, with_visits=False):
                 name, signature = e["display_name"].lower(), e["signature"].lower()
                 score = sum(w in name or w in signature for w in wanted) + (d.label in signature)
                 if score:
                     candidates.append((score, e))
         if not candidates:
             words = [w for w in description.lower().split() if w not in {"the", "a", "an"}]
-            for e in self.index.entities():
+            for e in self.index.entities(with_visits=False):
                 score = sum(w in e["display_name"].lower() for w in words)
                 if score:
                     candidates.append((score, e))
