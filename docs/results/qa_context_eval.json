@@ -1,0 +1,423 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T01:35:23",
+  "command": "python -m drone_security eval-qa (qa_questions.yaml)",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "seed": 7,
+ "frames": 646,
+ "questions": 20,
+ "question_file": "qa_questions.yaml",
+ "context_sizes": {
+  "naive": {
+   "chars": 87051,
+   "estimated_tokens": 21763
+  },
+  "hierarchical": {
+   "chars": 6488,
+   "estimated_tokens": 1622
+  },
+  "tools_only": {
+   "chars": 307,
+   "estimated_tokens": 77
+  },
+  "summaries": {
+   "chars": 6488,
+   "estimated_tokens": 1622
+  },
+  "offline": {
+   "chars": 0,
+   "estimated_tokens": 0
+  }
+ },
+ "model": null,
+ "results": {
+  "offline": {
+   "accuracy": 1.0,
+   "answerable_accuracy": 1.0,
+   "abstention_accuracy": 1.0,
+   "by_scope": {
+    "identity": 1,
+    "point": 1,
+    "unanswerable": 1,
+    "whole day": 1,
+    "window": 1
+   },
+   "mean_prompt_tokens": 0,
+   "mean_latency_s": 0.0,
+   "answers_with_unsupported_citations": 0,
+   "rows": [
+    {
+     "id": "Q01",
+     "scope": "whole day",
+     "question": "How many times did the blue Ford F150 enter the property today?",
+     "answer": "Blue Ford F150 (V-002, re-ID confidence 1.00) made 2 visits with 10 sightings: 09:14-09:42 (main gate, garage) [f256]; 16:45-17:10 (main gate, garage) [f454].\nRelated alerts:\n  - 16:45 [LOW] Blue Ford F150 entered twice today (09:14, 16:45), 16:45. [f454]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      256,
+      454
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q02",
+     "scope": "point",
+     "question": "When was someone loitering at the main gate?",
+     "answer": "1 alert:\n  - 00:01 [HIGH] Person in dark hoodie loitering at main gate, 00:01. [f1]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      1
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q03",
+     "scope": "point",
+     "question": "Was anyone in the warehouse after hours, and when?",
+     "answer": "3 alerts at night:\n  - 02:15 [HIGH] Masked person in black jacket in restricted area (warehouse) outside business hours, 02:15. [f68]\n  - 02:16 [CRITICAL] Masked person in black jacket tampering with an access point at warehouse, 02:16. [f69]\n  - 02:20 [MEDIUM] Door left open at warehouse, 02:20. [f71]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      68,
+      69,
+      71
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q04",
+     "scope": "point",
+     "question": "When was the main gate left open?",
+     "answer": "1 alert:\n  - 22:45 [MEDIUM] Gate left open at main gate, 22:45. [f611]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      611
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q05",
+     "scope": "point",
+     "question": "Which vehicle arrived after hours, and at what time?",
+     "answer": "1 alert at night:\n  - 23:10 [MEDIUM] Unrecognised Black SUV at driveway after hours, 23:10. [f623]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      623
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q06",
+     "scope": "point",
+     "question": "Was a bag or package left unattended? Where?",
+     "answer": "1 alert:\n  - 14:51 [MEDIUM] Black bag unattended at main gate for 19 min, 14:51. [f398]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      398
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q07",
+     "scope": "whole day",
+     "question": "What was the drone's lowest battery level while flying?",
+     "answer": "Lowest battery 13% at 03:38 [f110]; furthest from dock 389 m at 03:02 [f92]; worst GPS HDOP 5.6 at 02:52 [f87].\nFlight-safety alerts:\n  - 02:50 [MEDIUM] GPS_DRIFT: GPS drift suspected over open area (HDOP 4.8), 02:50. [f86]\n  - 03:00 [HIGH] GEOFENCE: Drone 379 m from dock, outside the geofence, 03:00. [f91]\n  - 03:08 [MEDIUM] BATTERY_LOW: Drone battery low (25%) over main gate, 03:08. [f95]\n  - 03:34 [HIGH] BATTERY_CRITICAL: Drone battery critical (14%) over front door, 03:34. [f108]\n  - 13:00 [MEDIUM] LOW_ALTITUDE: Drone at 8 m over backyard, below the 12 m minimum, 13:00. [f355]\n  - 15:10 [MEDIUM] HIGH_WIND: High wind 12.4 m/s at backyard, 15:10. [f407]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      86,
+      87,
+      91,
+      92,
+      95,
+      108,
+      110,
+      355,
+      407
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q08",
+     "scope": "point",
+     "question": "Did the drone leave the geofence? When?",
+     "answer": "Lowest battery 13% at 03:38 [f110]; furthest from dock 389 m at 03:02 [f92]; worst GPS HDOP 5.6 at 02:52 [f87].\nFlight-safety alerts:\n  - 02:50 [MEDIUM] GPS_DRIFT: GPS drift suspected over open area (HDOP 4.8), 02:50. [f86]\n  - 03:00 [HIGH] GEOFENCE: Drone 379 m from dock, outside the geofence, 03:00. [f91]\n  - 03:08 [MEDIUM] BATTERY_LOW: Drone battery low (25%) over main gate, 03:08. [f95]\n  - 03:34 [HIGH] BATTERY_CRITICAL: Drone battery critical (14%) over front door, 03:34. [f108]\n  - 13:00 [MEDIUM] LOW_ALTITUDE: Drone at 8 m over backyard, below the 12 m minimum, 13:00. [f355]\n  - 15:10 [MEDIUM] HIGH_WIND: High wind 12.4 m/s at backyard, 15:10. [f407]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      86,
+      87,
+      91,
+      92,
+      95,
+      108,
+      110,
+      355,
+      407
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q09",
+     "scope": "point",
+     "question": "When did the drone's GPS become unreliable?",
+     "answer": "Lowest battery 13% at 03:38 [f110]; furthest from dock 389 m at 03:02 [f92]; worst GPS HDOP 5.6 at 02:52 [f87].\nFlight-safety alerts:\n  - 02:50 [MEDIUM] GPS_DRIFT: GPS drift suspected over open area (HDOP 4.8), 02:50. [f86]\n  - 03:00 [HIGH] GEOFENCE: Drone 379 m from dock, outside the geofence, 03:00. [f91]\n  - 03:08 [MEDIUM] BATTERY_LOW: Drone battery low (25%) over main gate, 03:08. [f95]\n  - 03:34 [HIGH] BATTERY_CRITICAL: Drone battery critical (14%) over front door, 03:34. [f108]\n  - 13:00 [MEDIUM] LOW_ALTITUDE: Drone at 8 m over backyard, below the 12 m minimum, 13:00. [f355]\n  - 15:10 [MEDIUM] HIGH_WIND: High wind 12.4 m/s at backyard, 15:10. [f407]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      86,
+      87,
+      91,
+      92,
+      95,
+      108,
+      110,
+      355,
+      407
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q10",
+     "scope": "identity",
+     "question": "Is the blue Chevrolet Silverado the same vehicle as the blue Ford F150?",
+     "answer": "No: the tracker keeps them apart. Blue Chevrolet Silverado is V-004 (first seen 11:00 [f296]) and Blue Ford F150 is V-002 (first seen 09:14 [f256]).",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 2,
+     "cited": [
+      256,
+      296
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q11",
+     "scope": "whole day",
+     "question": "What animals were seen today?",
+     "answer": "Objects seen in the footage:\n  animal: fox (1 sightings, 1 distinct, first [f45]); dog (1 sightings, 1 distinct, first [f525]); deer (1 sightings, 1 distinct, first [f160])",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      45,
+      160,
+      525
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q12",
+     "scope": "window",
+     "question": "What happened between 23:00 and 23:30?",
+     "answer": "23:10-23:20 (5 frames): 23:10 Black SUV entered at driveway, 23:10 [f623]; 23:10 ALERT MEDIUM AFTER_HOURS_VEHICLE: Unrecognised Black SUV at driveway after hours, 23:10 [f623]; 23:12 2 people spotted at garage, 23:12 [f624]; 23:12 Black SUV spotted at garage, 23:12 [f624]; 23:12 ALERT HIGH AFTER_HOURS_PERSON: 2 people at garage during night hours, 23:12 [f624]; 23:16 2 people tampering at garage, 23:16 [f626]; 23:16 ALERT CRITICAL INTRUSION: 2 people tampering with an access point at garage, 23:16 [f626].\n23:20-23:30 (4 frames): 23:25 Black SUV leaving main gate, 23:25 [f630].",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      623,
+      624,
+      626,
+      630
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q13",
+     "scope": "point",
+     "question": "Who picked up the package delivered at 10:05?",
+     "answer": "3 package sightings of 1 distinct tracked identity:\n  - 10:05 Package at front door: Courier in a red jacket delivering a package to the front door, white van waiting in the driveway [f281]\n  - 10:10 Package at front door: Package left at the front door, no people visible [f283]\n  - 10:17 Package at front door: Staff member in gray sweater collecting the package from the front door [f286]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      281,
+      283,
+      286
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q14",
+     "scope": "point",
+     "question": "Did a white Toyota Camry visit, and is it a known vehicle?",
+     "answer": "White Toyota Camry (V-001, re-ID confidence 1.00) made 1 visit with 32 sightings: 07:50-16:40 (driveway) [f214]. It is a known vehicle (Property manager), so it raises no alerts.",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      214
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q15",
+     "scope": "point",
+     "question": "What happened at the back fence at 02:14?",
+     "answer": "02:10-02:20 (6 frames): 02:14 Masked person in black jacket climbing at back fence, 02:14 [f67]; 02:14 ALERT CRITICAL INTRUSION: Masked person in black jacket climbing at back fence, 02:14 [f67]; 02:15 Masked person in black jacket running at warehouse, 02:15 [f68]; 02:15 ALERT HIGH RESTRICTED_ZONE: Masked person in black jacket in restricted area (warehouse) outside business hours, 02:15 [f68]; 02:16 Masked person in black jacket tampering at warehouse, 02:16 [f69]; 02:16 ALERT CRITICAL INTRUSION: Masked person in black jacket tampering with an access point at warehouse, 02:16 [f69].\n02:20-02:30 (5 frames): 02:20 Door open at warehouse, 02:20 [f71]; 02:20 ALERT MEDIUM ACCESS_OPEN: Door left open at warehouse, 02:20 [f71].\n02:30-02:40 (5 frames): 02:36 Masked person in black jacket running at back fence, 02:36 [f79]; 02:36 ALERT HIGH AFTER_HOURS_PERSON: Masked person in black jacket at back fence during night hours, 02:36 [f79]; 02:38 Masked person in black jacket climbing at back fence, 02:38 [f80]; 02:38 ALERT CRITICAL INTRUSION: Masked person in black jacket climbing at back fence, 02:38 [f80].",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      67,
+      68,
+      69,
+      71,
+      79,
+      80
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q16",
+     "scope": "point",
+     "question": "How strong was the wind at 15:10?",
+     "answer": "At 15:10 the drone was in patrol mode over the backyard: altitude 32 m, battery 80%, wind 12.4 m/s, GPS HDOP 1.1, 64 m from the dock [f407].",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      407
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q17",
+     "scope": "identity",
+     "question": "How many people in total were seen climbing the back fence during the night?",
+     "answer": "3 person sightings of 1 distinct tracked identity at the back fence:\n  - 02:14 Masked person in black jacket at back fence: Masked man in a black jacket scaling the back fence [f67]\n  - 02:36 Masked person in black jacket at back fence: Masked person in black jacket running along the back fence [f79]\n  - 02:38 Masked person in black jacket at back fence: Masked man in black jacket climbing over the back fence [f80]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      67,
+      79,
+      80
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q18",
+     "scope": "unanswerable",
+     "question": "What was the licence plate of the black SUV?",
+     "answer": "Not enough evidence in the footage to answer that. The frame descriptions never record licence plates, so I cannot tell from this footage.",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 0,
+     "cited": [],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q19",
+     "scope": "unanswerable",
+     "question": "Did anyone enter the main office building?",
+     "answer": "Not enough evidence in the footage to answer that. No frame matches all of the words; the closest partial matches are:\n  - 11:00 [main gate] Blue pickup truck entering through the main gate [f296]\n  - 16:45 [main gate] Blue Ford F-150 entering through the main gate [f454]\n  - 15:42 [main gate] Person in blue shirt entering through the main gate [f423]\n  - 09:14 [main gate] Blue Ford F150 pickup truck entering through the main gate [f256]\n  - 23:10 [driveway] Black SUV entering the driveway with headlights off [f623]",
+     "correct": true,
+     "latency_s": 0.01,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      256,
+      296,
+      423,
+      454,
+      623
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q20",
+     "scope": "point",
+     "question": "What colour was the courier's van?",
+     "answer": "25 person sightings of 12 distinct tracked identities:\n  - 00:01 Person in dark hoodie at main gate: Person in a dark hoodie loitering at the main gate [f1]\n  - 00:03 Person in dark hoodie at main gate: Person in dark hoodie still standing at the main gate [f2]\n  - 00:05 Person in dark hoodie at main gate: Person in dark hoodie walking back and forth at the main gate [f3]\n  - 00:07 Person in dark hoodie at main gate: Person in dark hoodie still standing at the main gate [f4]\n  - 00:09 Person in dark hoodie at main gate: Person in dark hoodie leaving the main gate area [f5]\n  - 02:14 Masked person in black jacket at back fence: Masked man in a black jacket scaling the back fence [f67]\n  - 02:15 Masked person in black jacket at warehouse: Masked person in black jacket running toward the warehouse [f68]\n  - 02:16 Masked person in black jacket at warehouse: Masked person in black jacket prying at the warehouse side door [f69]\n  - 02:18 Masked person in black jacket at warehouse: Masked person in black jacket inside the warehouse loading bay [f70]\n  - 02:36 Masked person in black jacket at back fence: Masked person in black jacket running along the back fence [f79]\n  - 02:38 Masked person in black jacket at back fence: Masked man in black jacket climbing over the back fence [f80]\n  - 05:50 Person in uniform at warehouse: Security guard in uniform closing the warehouse side door [f165]\n  - 05:56 Person in uniform at main gate: Guard in uniform at the main gate [f168]\n  - 09:16 Person in hi-vis vest at garage: Blue F150 parked at garage; worker in hi-vis vest unloading tools [f257]\n  - 10:05 Person in red jacket at front door: Courier in a red jacket delivering a package to the front door, white van waiting in the driveway [f281]\n  - 10:17 Person in gray sweater at front door: Staff member in gray sweater collecting the package from the front door [f286]\n  - 12:30 2 people at warehouse: Two workers and a yellow forklift moving boxes at the warehouse [f340]\n  - 13:10 Person in green cap at backyard: Gardener in green cap walking across the backyard [f360]\n  - 14:30 Person in gray hoodie at main gate: Person in a gray hoodie walking to the main gate with a black bag [f389]\n  - 14:32 Person in gray hoodie at main gate: Person in gray hoodie sets a black bag down at the main gate, then leaves [f390]\n  - 15:20 Person in uniform at main gate: Security guard in uniform picks up the black bag at the main gate [f412]\n  - 15:40 Person in blue shirt at main gate: Person in a blue shirt waiting at the main gate [f422]\n  - 15:42 Person in blue shirt at main gate: Person in blue shirt entering through the main gate [f423]\n  - 16:47 Person in gray t-shirt at garage: Blue Ford F150 parked at the garage, man in gray t-shirt carrying a ladder [f455]\n  - 23:12 2 people at garage: Two people leave the black SUV and walk to the garage [f624]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      67,
+      68,
+      69,
+      70,
+      79,
+      80,
+      165,
+      168,
+      257,
+      281,
+      286,
+      340,
+      360,
+      389,
+      390,
+      412,
+      422,
+      423,
+      455,
+      624
+     ],
+     "unsupported_citations": []
+    }
+   ]
+  }
+ }
+}

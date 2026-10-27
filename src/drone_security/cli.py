@@ -8,11 +8,17 @@
   summary    one-sentence video summary, daily briefing and recommendations
   context    print the agent's hierarchical working memory
   eval       score the pipeline against ground truth over several seeds
+  eval-retrieval  keyword vs semantic vs hybrid search on labelled queries
+  eval-qa    context experiment: naive prompt vs hierarchical memory vs ablations
+  vlm        Gemini VLM on the real images in data/images, scored against hand labels
+  benchmark  scalability: 10k / 50k / 100k / 200k frames
+  demo       scene-by-scene walkthrough for the demo video
   models     list the Gemini models this key can use and the ones chosen
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -240,6 +246,84 @@ def cmd_eval(args) -> int:
     return 0
 
 
+def cmd_eval_retrieval(args) -> int:
+    from .evaluation.retrieval_eval import run_retrieval_eval, write_retrieval_report
+
+    config = PropertyConfig.load(args.config)
+    embedders = {}
+    if args.gemini:
+        from .gemini import GeminiClient
+        from .retrieval import GeminiEmbedder
+
+        client = GeminiClient()
+        embedders["gemini"] = lambda index: GeminiEmbedder(client, index)
+    result = run_retrieval_eval(config, embedders)
+    path = write_retrieval_report(result, RESULTS)
+    table("Retrieval (k=10)", ["method", "hit@10", "MRR", "nDCG@10", "median ms"],
+          [[name, r["overall"]["hit_at_k"], r["overall"]["mrr"], r["overall"]["ndcg"], r["median_latency_ms"]]
+           for name, r in result["results"].items()])
+    out(f"full results: {path}")
+    return 0
+
+
+def cmd_eval_qa(args) -> int:
+    from .evaluation.qa_eval import HELDOUT, QUESTIONS, run_qa_eval, write_qa_report
+
+    config = PropertyConfig.load(args.config)
+    gemini = None
+    if args.gemini:
+        from .gemini import GeminiClient
+
+        gemini = GeminiClient()
+    questions = HELDOUT if args.heldout else QUESTIONS
+    result = run_qa_eval(config, gemini=gemini, conditions=args.conditions, pause_s=args.pause, questions_path=questions)
+    name = "qa_heldout_eval" if args.heldout else "qa_context_eval"
+    path = write_qa_report(result, RESULTS, name=name)
+    table("Answers", ["condition", "accuracy", "abstention", "mean prompt tokens", "mean latency s", "made-up citations"],
+          [[c, r["accuracy"], r["abstention_accuracy"], r["mean_prompt_tokens"], r["mean_latency_s"],
+            r["answers_with_unsupported_citations"]] for c, r in result["results"].items()])
+    out(f"full results: {path}")
+    return 0
+
+
+def cmd_vlm(args) -> int:
+    from .evaluation.vlm_eval import run_vlm_check, write_vlm_report
+    from .gemini import GeminiClient
+    from .perception.gemini_analyzer import GeminiVisionAnalyzer
+
+    config = PropertyConfig.load(args.config)
+    client = GeminiClient()
+    result = run_vlm_check(config, GeminiVisionAnalyzer(config, client), client=client)
+    path = write_vlm_report(result, RESULTS)
+    for r in result["rows"]:
+        out(f"{r['file']} [{r['zone']} {r['time']}] {r['latency_s']} s", style="bold")
+        out(f"  caption: {r['caption']}")
+        out(f"  objects: {'; '.join(r['vlm_objects']) or '-'}")
+        out(f"  alerts:  {', '.join(r['alerts']) or '-'} (expected {r['expected_alert'] or 'none'})")
+    out(json.dumps(result["summary"], indent=1))
+    out(f"full results: {path}")
+    return 0
+
+
+def cmd_benchmark(args) -> int:
+    from .evaluation.benchmark import run_benchmark, write_benchmark_report
+
+    config = PropertyConfig.load(args.config)
+    heading(f"Scalability benchmark: {', '.join(f'{n:,}' for n in args.frames)} frames")
+    result = run_benchmark(config, sizes=args.frames, repeats=args.repeats)
+    path = write_benchmark_report(result, RESULTS)
+    out(path.read_text(encoding="utf-8"))
+    return 0
+
+
+def cmd_demo(args) -> int:
+    from .demo import Demo
+
+    Demo(PropertyConfig.load(args.config), Path(args.db), pause=args.pause, fast=args.fast,
+         use_llm=False if args.offline else None).run()
+    return 0
+
+
 def cmd_models(args) -> int:
     from .gemini import GeminiClient, record_model_choice
 
@@ -368,6 +452,31 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--seeds", type=int, default=10)
     p.add_argument("--analyzer", choices=["rules", "gemini"], default="rules")
     p.set_defaults(func=cmd_eval)
+
+    p = sub.add_parser("eval-retrieval", help="keyword vs semantic vs hybrid retrieval on labelled queries")
+    p.add_argument("--gemini", action="store_true", help="also evaluate Gemini embeddings")
+    p.set_defaults(func=cmd_eval_retrieval)
+
+    p = sub.add_parser("eval-qa", help="context-management experiment on a fixed question set")
+    p.add_argument("--gemini", action="store_true", help="run the Gemini conditions (needs GEMINI_API_KEY)")
+    p.add_argument("--heldout", action="store_true", help="use the held-out question set")
+    p.add_argument("--conditions", nargs="+", choices=["offline", "naive", "hierarchical", "tools_only", "summaries"])
+    p.add_argument("--pause", type=float, default=0.0, help="seconds between questions (free-tier rate limits)")
+    p.set_defaults(func=cmd_eval_qa)
+
+    p = sub.add_parser("vlm", help="Gemini VLM on the real images in data/images")
+    p.set_defaults(func=cmd_vlm)
+
+    p = sub.add_parser("benchmark", help="scalability benchmark")
+    p.add_argument("--frames", type=int, nargs="+", default=[10_000, 50_000, 100_000, 200_000])
+    p.add_argument("--repeats", type=int, default=30)
+    p.set_defaults(func=cmd_benchmark)
+
+    p = sub.add_parser("demo", help="scene-by-scene walkthrough for the demo video")
+    p.add_argument("--pause", action="store_true", help="wait for Enter between scenes (for recording)")
+    p.add_argument("--fast", action="store_true", help="no streaming delay")
+    p.add_argument("--offline", action="store_true", help="offline analyst even if a Gemini key is set")
+    p.set_defaults(func=cmd_demo)
 
     p = sub.add_parser("models", help="list Gemini models and record the choice")
     p.set_defaults(func=cmd_models)

@@ -1,0 +1,54 @@
+# Held-out questions: written after the offline analyst was tuned on qa_questions.yaml and
+# scored once without further changes, so they measure how the question routing generalises.
+# Same grading rules as qa_questions.yaml.
+
+questions:
+  - id: H01
+    q: "At what time did the blue Ford F150 first arrive?"
+    any: ["09:14"]
+    scope: point
+  - id: H02
+    q: "What was the person loitering at the main gate around midnight wearing?"
+    any: ["hoodie"]
+    scope: point
+  - id: H03
+    q: "What did the masked person do at the warehouse?"
+    any: ["pry", "forc", "tamper", "side door"]
+    scope: point
+  - id: H04
+    q: "When did the drone dock to recharge after the night incident?"
+    any: ["03:40"]
+    scope: point
+  - id: H05
+    q: "Was any vehicle parked at the warehouse in the late morning?"
+    any: ["silverado"]
+    scope: window
+  - id: H06
+    q: "Until when did the black bag stay at the main gate?"
+    all: ["bag"]
+    any: ["15:[0-2]\\d"]
+    scope: point
+  - id: H07
+    q: "Did the gardener trigger any alerts?"
+    any: ["\\bno\\b", "\\bnone\\b", "no alerts", "did not", "didn't"]
+    scope: identity
+  - id: H08
+    q: "What was the drone's altitude during the backyard sprinkler inspection?"
+    any: ["\\b8\\s?m\\b", "8 meters", "8 metres"]
+    scope: point
+  - id: H09
+    q: "Which zones are on the property?"
+    all: ["main gate", "warehouse", "back fence"]
+    scope: whole day
+  - id: H10
+    q: "What was the name of the courier?"
+    abstain: true
+    scope: unanswerable
+  - id: H11
+    q: "How many critical alerts were raised today?"
+    any: ["\\b4\\b", "\\bfour\\b"]
+    scope: whole day
+  - id: H12
+    q: "What happened in the hour after the main gate was left open?"
+    all: ["SUV"]
+    scope: window

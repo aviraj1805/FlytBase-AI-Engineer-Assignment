@@ -81,12 +81,13 @@ class OfflineAnalyst:
             text = self._inventory(window, animals_only="animal" in q)
         elif re.search(r"battery|altitude|wind|telemetry|drone status|where was the drone|geofence|gps|flight|drone (health|problem|issue)", q):
             text = self._drone(window)
-        elif re.search(r"\bsame\b.*\bas\b|\bdifferent\b", q) and len(_parser.parse(q)) >= 2:
+        elif re.search(r"\bsame\b.*\bas\b|\bdifferent\b", q) and len(_identities(q)) >= 2:
             text = self._same_entity(q)
         elif (subject and self._trackable(subject)
               and re.search(r"how many times|how often|visit|when did|came back|come back|return|enter|arriv|leave|\bleft\b(?! open)|history", q)):
             text = self._entity(subject, q)
-        elif re.search(r"alert|threat|suspicious|incident|intru|break|danger|unusual|loiter|unattended|left open|restricted|tamper", q):
+        elif re.search(r"alert|threat|suspicious|incident|intru|break|danger|unusual|loiter|unattended|left open|restricted|"
+                       r"tamper|after hours|after dark", q):
             text = self._alerts(q, window, zone)
         elif re.search(r"summar|overview|what happened|recap|tl;?dr|activity|timeline", q):
             text = self._window_summary(window) if window.given else self._day_summary()
@@ -182,13 +183,15 @@ class OfflineAnalyst:
                           f"[f{v['frame_ids'][0]}]" for v in visits)
         text = (f"{e['name']} ({e['entity_id']}, re-ID confidence {e['reid_confidence']:.2f}) made {e['visit_count']} "
                 f"visit{'s' if e['visit_count'] != 1 else ''} with {e['sightings']} sightings: {times}.")
+        if e.get("known_vehicle"):
+            text += f" It is a known vehicle ({e['known_vehicle']}), so it raises no alerts."
         if e["alerts"]:
             text += "\nRelated alerts:\n" + "\n".join(f"  - {a['time']} [{a['severity']}] {a['message']} [f{a['frame_id']}]"
                                                      for a in e["alerts"])
         return text
 
     def _same_entity(self, q: str) -> str:
-        first, second = [d.display_name.lower() for d in _parser.parse(q)[:2]]
+        first, second = _identities(q)[:2]
         a, b = self._call("entity_history", description=first), self._call("entity_history", description=second)
         if not a["found"] or not b["found"]:
             return NOT_ENOUGH_EVIDENCE
@@ -201,6 +204,8 @@ class OfflineAnalyst:
 
     def _alerts(self, q: str, w: _Window, zone: Optional[str]) -> str:
         rule = next((r for pattern, r in _RULE_WORDS if re.search(pattern, q)), None)
+        if rule is None and not zone and re.search(r"after hours|after dark|overnight", q):  # a named zone: all its alerts
+            rule = "AFTER_HOURS_VEHICLE" if re.search(r"vehicle|car|truck|van|suv", q) else "AFTER_HOURS_PERSON"
         severity = "CRITICAL" if "critical" in q else "HIGH" if re.search(r"serious|severe|\bhigh\b", q) else None
         if re.search(r"\balerts?\b|incident|suspicious|threat|unusual", q) and not re.search(r"loiter|unattended|restricted", q):
             rule = None  # a general question about alerts, not one rule
@@ -222,7 +227,9 @@ class OfflineAnalyst:
         self.focus = subject or self.focus
         what = subject or "activity"
         where = f" at the {self.config.zone_name(zone)}" if zone else ""
-        lines = [f"{len(frames)} {what} sighting{'s' if len(frames) != 1 else ''}{where}:"]
+        distinct = {f["entity_id"] for f in frames if f.get("entity_id")}
+        count = f" of {len(distinct)} distinct tracked {'identity' if len(distinct) == 1 else 'identities'}" if distinct else ""
+        lines = [f"{len(frames)} {what} sighting{'s' if len(frames) != 1 else ''}{count}{where}:"]
         lines += [f"  - {f['time']} {f.get('object') or ''} at {self.config.zone_name(f['zone'])}: {f['caption']} "
                   f"[f{f['frame_id']}]".replace("  at", " at") for f in frames]
         return "\n".join(lines)
@@ -267,11 +274,21 @@ class OfflineAnalyst:
 
     @staticmethod
     def _trackable(subject: str) -> bool:
+        """An identity needs a distinguishing detail: 'the blue F150' is one, 'a vehicle' is not."""
         parsed = _parser.parse(subject)
-        return bool(parsed) and parsed[0].category in {"vehicle", "person", "animal"}
+        if not parsed or parsed[0].category not in {"vehicle", "person", "animal"}:
+            return False
+        d = parsed[0]
+        return d.category == "animal" or bool(d.color or d.make or d.model or d.attributes)
 
     def _is_night(self, hhmm: str) -> bool:
         return self.config.is_night(datetime.strptime(hhmm, "%H:%M"))
+
+
+def _identities(q: str) -> list[str]:
+    """Descriptions in a question that can name one identity ('blue Ford F150', not 'vehicle')."""
+    found = _parser.parse(q)
+    return [d.display_name.lower() for d in found if d.color or d.make or d.model or d.attributes]
 
 
 def _parse_window(q: str) -> _Window:
@@ -286,9 +303,10 @@ def _parse_window(q: str) -> _Window:
         return _Window(end=m.group(1))
     m = re.search(rf"(?:at|around|near)\s+{_TIME}", q)
     if m:
+        # "the package delivered at 10:05": what follows a stated time is usually what is asked about
         center = datetime.strptime(m.group(1), "%H:%M")
-        return _Window((center - timedelta(minutes=10)).strftime("%H:%M"),
-                       (center + timedelta(minutes=10)).strftime("%H:%M"), point=m.group(1))
+        return _Window((center - timedelta(minutes=5)).strftime("%H:%M"),
+                       (center + timedelta(minutes=30)).strftime("%H:%M"), point=m.group(1))
     for word, (start, end) in _PERIODS.items():
         if re.search(rf"\b{word}\b", q):
             return _Window(start, end)

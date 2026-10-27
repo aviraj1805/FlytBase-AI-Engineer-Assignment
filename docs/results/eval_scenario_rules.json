@@ -1,0 +1,1405 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T01:35:22",
+  "command": "python -m drone_security eval --seeds 10 --analyzer rules",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10
+ ],
+ "summary": {
+  "alert_precision": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  },
+  "alert_recall": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  },
+  "alert_f1": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  },
+  "detection_precision": {
+   "mean": 0.991,
+   "min": 0.991,
+   "max": 0.991
+  },
+  "detection_recall": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  },
+  "reid_precision": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  },
+  "reid_recall": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  },
+  "reid_f1": {
+   "mean": 1.0,
+   "min": 1.0,
+   "max": 1.0
+  }
+ },
+ "runs": [
+  {
+   "seed": 1,
+   "frames": 646,
+   "frames_per_second": 7028,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.795,
+     "make": 1.0,
+     "model": 1.0
+    },
+    "examples": [
+     "FP f340 'Two workers and a yellow forklift moving boxes at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.995
+   }
+  },
+  {
+   "seed": 2,
+   "frames": 646,
+   "frames_per_second": 6958,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.872,
+     "make": 1.0,
+     "model": 1.0
+    },
+    "examples": [
+     "FP f340 'Two workers loading boxes onto a yellow forklift at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.995
+   }
+  },
+  {
+   "seed": 3,
+   "frames": 646,
+   "frames_per_second": 7154,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.808,
+     "make": 0.979,
+     "model": 0.979
+    },
+    "examples": [
+     "FP f340 'Two workers and a yellow forklift moving boxes at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.991
+   }
+  },
+  {
+   "seed": 4,
+   "frames": 646,
+   "frames_per_second": 7247,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.846,
+     "make": 0.979,
+     "model": 0.979
+    },
+    "examples": [
+     "FP f340 'Two workers and a yellow forklift moving boxes at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.991
+   }
+  },
+  {
+   "seed": 5,
+   "frames": 646,
+   "frames_per_second": 6179,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.833,
+     "make": 1.0,
+     "model": 1.0
+    },
+    "examples": [
+     "FP f340 'Two workers loading boxes onto a yellow forklift at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.995
+   }
+  },
+  {
+   "seed": 6,
+   "frames": 646,
+   "frames_per_second": 6916,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.833,
+     "make": 0.979,
+     "model": 0.979
+    },
+    "examples": [
+     "FP f340 'Two workers loading boxes onto a yellow forklift at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.991
+   }
+  },
+  {
+   "seed": 7,
+   "frames": 646,
+   "frames_per_second": 6842,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.833,
+     "make": 0.979,
+     "model": 0.979
+    },
+    "examples": [
+     "FP f340 'Two workers and a yellow forklift moving boxes at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.991
+   }
+  },
+  {
+   "seed": 8,
+   "frames": 646,
+   "frames_per_second": 7365,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.846,
+     "make": 1.0,
+     "model": 1.0
+    },
+    "examples": [
+     "FP f340 'Two workers and a yellow forklift moving boxes at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.995
+   }
+  },
+  {
+   "seed": 9,
+   "frames": 646,
+   "frames_per_second": 7292,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.833,
+     "make": 1.0,
+     "model": 1.0
+    },
+    "examples": [
+     "FP f340 'Two workers and a yellow forklift moving boxes at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.995
+   }
+  },
+  {
+   "seed": 10,
+   "frames": 646,
+   "frames_per_second": 6997,
+   "alerts": {
+    "incidents": 20,
+    "alerts": 19,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "redundant_alerts": 1,
+    "mean_minutes_to_alert": 0.6,
+    "false_positives": [],
+    "missed": [],
+    "per_rule": {
+     "ACCESS_OPEN": {
+      "expected": 2,
+      "detected": 2,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_PERSON": {
+      "expected": 3,
+      "detected": 3,
+      "raised": 2,
+      "false_positives": 0
+     },
+     "AFTER_HOURS_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_CRITICAL": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "BATTERY_LOW": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GEOFENCE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "GPS_DRIFT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "HIGH_WIND": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "INTRUSION": {
+      "expected": 4,
+      "detected": 4,
+      "raised": 4,
+      "false_positives": 0
+     },
+     "LOITERING": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "LOW_ALTITUDE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "REPEAT_VEHICLE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "RESTRICTED_ZONE": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     },
+     "UNATTENDED_OBJECT": {
+      "expected": 1,
+      "detected": 1,
+      "raised": 1,
+      "false_positives": 0
+     }
+    }
+   },
+   "detections": {
+    "precision": 0.991,
+    "recall": 1.0,
+    "f1": 0.995,
+    "true_positives": 108,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "attribute_accuracy": {
+     "color": 1.0,
+     "action": 0.872,
+     "make": 0.979,
+     "model": 0.979
+    },
+    "examples": [
+     "FP f340 'Two workers loading boxes onto a yellow forklift at the warehouse': object/package"
+    ]
+   },
+   "reid": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "pairs_evaluated": 586,
+    "true_entities": 18,
+    "predicted_entities": 18,
+    "splits": {},
+    "merges": {},
+    "f150_entities": 1,
+    "f150_visits": [
+     2
+    ],
+    "mean_track_confidence": 0.991
+   }
+  }
+ ]
+}

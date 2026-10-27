@@ -1,0 +1,92 @@
+# Fixed question set for the context-management experiment (generated day, seed 7).
+#
+# Answers come from the scenario ground truth. Grading is automatic and deliberately simple:
+# an answer is correct when it matches every `all` pattern and at least one `any` pattern
+# (case-insensitive regular expressions). `abstain: true` questions cannot be answered from the
+# footage; the correct answer says "not enough evidence". Several questions need the whole day
+# at once (counts, inventories), which is what separates the context strategies.
+
+questions:
+  - id: Q01
+    q: "How many times did the blue Ford F150 enter the property today?"
+    any: ["\\b2\\b", "\\btwo\\b", "twice"]
+    scope: whole day
+  - id: Q02
+    q: "When was someone loitering at the main gate?"
+    any: ["00:0[1-9]"]
+    scope: point
+  - id: Q03
+    q: "Was anyone in the warehouse after hours, and when?"
+    any: ["02:1[4-8]"]
+    scope: point
+  - id: Q04
+    q: "When was the main gate left open?"
+    any: ["22:4[5-9]"]
+    scope: point
+  - id: Q05
+    q: "Which vehicle arrived after hours, and at what time?"
+    all: ["SUV"]
+    any: ["23:1[0-2]"]
+    scope: point
+  - id: Q06
+    q: "Was a bag or package left unattended? Where?"
+    all: ["bag", "main gate"]
+    scope: point
+  - id: Q07
+    q: "What was the drone's lowest battery level while flying?"
+    any: ["1[234](\\.\\d)?\\s?%"]
+    scope: whole day
+  - id: Q08
+    q: "Did the drone leave the geofence? When?"
+    any: ["03:0[0-3]"]
+    scope: point
+  - id: Q09
+    q: "When did the drone's GPS become unreliable?"
+    any: ["02:5[0-3]"]
+    scope: point
+  - id: Q10
+    q: "Is the blue Chevrolet Silverado the same vehicle as the blue Ford F150?"
+    any: ["\\bno\\b", "different", "not the same", "separate", "distinct"]
+    scope: identity
+  - id: Q11
+    q: "What animals were seen today?"
+    all: ["fox", "deer", "dog"]
+    scope: whole day
+  - id: Q12
+    q: "What happened between 23:00 and 23:30?"
+    all: ["SUV"]
+    any: ["handle", "tamper", "garage"]
+    scope: window
+  - id: Q13
+    q: "Who picked up the package delivered at 10:05?"
+    any: ["gr[ae]y sweater", "woman", "staff"]
+    scope: point
+  - id: Q14
+    q: "Did a white Toyota Camry visit, and is it a known vehicle?"
+    all: ["07:5\\d"]
+    any: ["known", "property manager", "whitelist"]
+    scope: point
+  - id: Q15
+    q: "What happened at the back fence at 02:14?"
+    any: ["climb", "scal"]
+    scope: point
+  - id: Q16
+    q: "How strong was the wind at 15:10?"
+    any: ["12\\.4"]
+    scope: point
+  - id: Q17
+    q: "How many people in total were seen climbing the back fence during the night?"
+    any: ["\\b1\\b", "\\bone\\b", "single", "same person", "one person"]
+    scope: identity
+  - id: Q18
+    q: "What was the licence plate of the black SUV?"
+    abstain: true
+    scope: unanswerable
+  - id: Q19
+    q: "Did anyone enter the main office building?"
+    abstain: true
+    scope: unanswerable
+  - id: Q20
+    q: "What colour was the courier's van?"
+    any: ["white"]
+    scope: point

@@ -1,0 +1,31 @@
+# Labelled retrieval queries for the generated day.
+#
+# Relevance comes from the ground truth, not from caption words: a frame is relevant when
+# its true objects include one of `entities` (optionally only with one of `actions` or
+# `states`). Queries are written the way an operator would type them; about half avoid
+# the captions' wording on purpose ("someone hanging around the entrance") so that
+# keyword search and semantic search can be compared fairly.
+
+queries:
+  - {query: "blue Ford F150", entities: [f150], style: exact}
+  - {query: "F-150 pickup", entities: [f150], style: exact}
+  - {query: "pickup trucks", entities: [f150, silverado], style: category}
+  - {query: "Chevy Silverado", entities: [silverado], style: exact}
+  - {query: "someone hanging around the entrance late at night", entities: [hoodie], style: paraphrase}
+  - {query: "person climbing the fence", entities: [intruder], actions: [climbing], style: exact}
+  - {query: "break-in at the warehouse", entities: [intruder], actions: [tampering, standing, running], style: paraphrase}
+  - {query: "masked intruder", entities: [intruder], style: paraphrase}
+  - {query: "parcel left at the front door", entities: [package], style: paraphrase}
+  - {query: "suspicious bag abandoned near the gate", entities: [bag], style: paraphrase}
+  - {query: "gate left open", entities: [gate], style: exact}
+  - {query: "warehouse door open", entities: [wh_door], style: exact}
+  - {query: "dark SUV arriving with its lights off", entities: [suv], style: paraphrase}
+  - {query: "delivery van", entities: [courier_van], style: exact}
+  - {query: "wild animals in the garden", entities: [fox, deer, dog], style: paraphrase}
+  - {query: "security guard", entities: [guard], style: exact}
+  - {query: "man carrying a ladder", entities: [ladderman], style: exact}
+  - {query: "workers using a forklift", entities: [workers, forklift], style: paraphrase}
+  - {query: "people trying to open doors", entities: [suv_pair], actions: [tampering], style: paraphrase}
+  - {query: "the property manager's white Toyota", entities: [camry], style: paraphrase}
+  - {query: "gardener", entities: [gardener], style: exact}
+  - {query: "courier dropping off a parcel", entities: [courier], style: paraphrase}

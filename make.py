@@ -3,8 +3,10 @@
     python make.py setup       create .venv and install the project + test dependencies
     python make.py run         process the demo day: live logs, alerts, summary
     python make.py test        run the pytest suite
-    python make.py demo        scene-by-scene demo for the recorded video
-    python make.py benchmark   scalability benchmark (10k / 50k / 100k frames)
+    python make.py demo        scene-by-scene demo for the recorded video (offline)
+    python make.py eval        offline experiments: ground-truth scoring, retrieval, Q&A -> docs/results
+    python make.py eval-gemini Gemini experiments (needs GEMINI_API_KEY): models, VLM, retrieval, Q&A
+    python make.py benchmark   scalability benchmark (10k / 50k / 100k / 200k frames) -> docs/results
 """
 from __future__ import annotations
 
@@ -42,11 +44,29 @@ def setup() -> None:
     sh(venv_python(), "-m", "pip", "install", "-e", ".[dev]")
 
 
+def evaluate_offline() -> None:
+    app("eval", "--seeds", "10")
+    app("eval-retrieval")
+    app("eval-qa")
+    app("eval-qa", "--heldout")
+
+
+def evaluate_gemini() -> None:
+    app("models")
+    app("vlm")
+    app("eval-retrieval", "--gemini")
+    app("eval", "--seeds", "3", "--analyzer", "gemini")
+    app("eval-qa", "--gemini", "--pause", "1")
+    app("eval-qa", "--gemini", "--heldout", "--pause", "1")
+
+
 TARGETS = {
     "setup": setup,
     "run": lambda: app("run"),
     "test": lambda: sh(venv_python(), "-m", "pytest"),
-    "demo": lambda: app("run", "--verbose"),
+    "demo": lambda: app("demo", "--offline"),
+    "eval": evaluate_offline,
+    "eval-gemini": evaluate_gemini,
     "benchmark": lambda: app("benchmark"),
 }
 

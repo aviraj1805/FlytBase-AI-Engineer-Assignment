@@ -1,0 +1,635 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T01:35:22",
+  "command": "python -m drone_security eval-retrieval",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "queries": 22,
+ "k": 10,
+ "seed": 7,
+ "results": {
+  "keyword (FTS5/BM25)": {
+   "overall": {
+    "hit_at_k": 0.795,
+    "mrr": 0.909,
+    "ndcg": 0.822,
+    "n": 22
+   },
+   "by_style": {
+    "category": {
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0,
+     "n": 1
+    },
+    "exact": {
+     "hit_at_k": 0.817,
+     "mrr": 1.0,
+     "ndcg": 0.863,
+     "n": 10
+    },
+    "paraphrase": {
+     "hit_at_k": 0.758,
+     "mrr": 0.818,
+     "ndcg": 0.768,
+     "n": 11
+    }
+   },
+   "median_latency_ms": 0.11,
+   "per_query": [
+    {
+     "query": "blue Ford F150",
+     "style": "exact",
+     "relevant": 10,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "F-150 pickup",
+     "style": "exact",
+     "relevant": 10,
+     "hit_at_k": 0.2,
+     "mrr": 1.0,
+     "ndcg": 0.3589542101716347
+    },
+    {
+     "query": "pickup trucks",
+     "style": "category",
+     "relevant": 15,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "Chevy Silverado",
+     "style": "exact",
+     "relevant": 5,
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.8687949224876582
+    },
+    {
+     "query": "someone hanging around the entrance late at night",
+     "style": "paraphrase",
+     "relevant": 5,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "person climbing the fence",
+     "style": "exact",
+     "relevant": 2,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "break-in at the warehouse",
+     "style": "paraphrase",
+     "relevant": 4,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "masked intruder",
+     "style": "paraphrase",
+     "relevant": 6,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "parcel left at the front door",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 0.3333333333333333,
+     "mrr": 1.0,
+     "ndcg": 0.46927872602275644
+    },
+    {
+     "query": "suspicious bag abandoned near the gate",
+     "style": "paraphrase",
+     "relevant": 6,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 0.9838048780283076
+    },
+    {
+     "query": "gate left open",
+     "style": "exact",
+     "relevant": 4,
+     "hit_at_k": 0.5,
+     "mrr": 1.0,
+     "ndcg": 0.6366824387328317
+    },
+    {
+     "query": "warehouse door open",
+     "style": "exact",
+     "relevant": 13,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "dark SUV arriving with its lights off",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "delivery van",
+     "style": "exact",
+     "relevant": 2,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "wild animals in the garden",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "security guard",
+     "style": "exact",
+     "relevant": 3,
+     "hit_at_k": 0.6666666666666666,
+     "mrr": 1.0,
+     "ndcg": 0.7653606369886217
+    },
+    {
+     "query": "man carrying a ladder",
+     "style": "exact",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "workers using a forklift",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "people trying to open doors",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "the property manager's white Toyota",
+     "style": "paraphrase",
+     "relevant": 32,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "gardener",
+     "style": "exact",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "courier dropping off a parcel",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    }
+   ]
+  },
+  "semantic (tfidf)": {
+   "overall": {
+    "hit_at_k": 0.742,
+    "mrr": 0.864,
+    "ndcg": 0.768,
+    "n": 22
+   },
+   "by_style": {
+    "category": {
+     "hit_at_k": 0.4,
+     "mrr": 1.0,
+     "ndcg": 0.564,
+     "n": 1
+    },
+    "exact": {
+     "hit_at_k": 0.91,
+     "mrr": 1.0,
+     "ndcg": 0.928,
+     "n": 10
+    },
+    "paraphrase": {
+     "hit_at_k": 0.621,
+     "mrr": 0.727,
+     "ndcg": 0.641,
+     "n": 11
+    }
+   },
+   "median_latency_ms": 0.22,
+   "per_query": [
+    {
+     "query": "blue Ford F150",
+     "style": "exact",
+     "relevant": 10,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "F-150 pickup",
+     "style": "exact",
+     "relevant": 10,
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.7951657524814092
+    },
+    {
+     "query": "pickup trucks",
+     "style": "category",
+     "relevant": 15,
+     "hit_at_k": 0.4,
+     "mrr": 1.0,
+     "ndcg": 0.5637884576902256
+    },
+    {
+     "query": "Chevy Silverado",
+     "style": "exact",
+     "relevant": 5,
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.8687949224876582
+    },
+    {
+     "query": "someone hanging around the entrance late at night",
+     "style": "paraphrase",
+     "relevant": 5,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "person climbing the fence",
+     "style": "exact",
+     "relevant": 2,
+     "hit_at_k": 0.5,
+     "mrr": 1.0,
+     "ndcg": 0.6131471927654584
+    },
+    {
+     "query": "break-in at the warehouse",
+     "style": "paraphrase",
+     "relevant": 4,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "masked intruder",
+     "style": "paraphrase",
+     "relevant": 6,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "parcel left at the front door",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 0.3333333333333333,
+     "mrr": 1.0,
+     "ndcg": 0.46927872602275644
+    },
+    {
+     "query": "suspicious bag abandoned near the gate",
+     "style": "paraphrase",
+     "relevant": 6,
+     "hit_at_k": 0.8333333333333334,
+     "mrr": 1.0,
+     "ndcg": 0.8829374068620365
+    },
+    {
+     "query": "gate left open",
+     "style": "exact",
+     "relevant": 4,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "warehouse door open",
+     "style": "exact",
+     "relevant": 13,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "dark SUV arriving with its lights off",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 0.6666666666666666,
+     "mrr": 1.0,
+     "ndcg": 0.7039180890341347
+    },
+    {
+     "query": "delivery van",
+     "style": "exact",
+     "relevant": 2,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "wild animals in the garden",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "security guard",
+     "style": "exact",
+     "relevant": 3,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "man carrying a ladder",
+     "style": "exact",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "workers using a forklift",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "people trying to open doors",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "the property manager's white Toyota",
+     "style": "paraphrase",
+     "relevant": 32,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "gardener",
+     "style": "exact",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "courier dropping off a parcel",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    }
+   ]
+  },
+  "hybrid (BM25 + tfidf)": {
+   "overall": {
+    "hit_at_k": 0.844,
+    "mrr": 0.886,
+    "ndcg": 0.839,
+    "n": 22
+   },
+   "by_style": {
+    "category": {
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.852,
+     "n": 1
+    },
+    "exact": {
+     "hit_at_k": 0.96,
+     "mrr": 1.0,
+     "ndcg": 0.969,
+     "n": 10
+    },
+    "paraphrase": {
+     "hit_at_k": 0.742,
+     "mrr": 0.773,
+     "ndcg": 0.72,
+     "n": 11
+    }
+   },
+   "median_latency_ms": 0.4,
+   "per_query": [
+    {
+     "query": "blue Ford F150",
+     "style": "exact",
+     "relevant": 10,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "F-150 pickup",
+     "style": "exact",
+     "relevant": 10,
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.8200685179888283
+    },
+    {
+     "query": "pickup trucks",
+     "style": "category",
+     "relevant": 15,
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.8521705090845474
+    },
+    {
+     "query": "Chevy Silverado",
+     "style": "exact",
+     "relevant": 5,
+     "hit_at_k": 0.8,
+     "mrr": 1.0,
+     "ndcg": 0.8687949224876582
+    },
+    {
+     "query": "someone hanging around the entrance late at night",
+     "style": "paraphrase",
+     "relevant": 5,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "person climbing the fence",
+     "style": "exact",
+     "relevant": 2,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "break-in at the warehouse",
+     "style": "paraphrase",
+     "relevant": 4,
+     "hit_at_k": 0.0,
+     "mrr": 0.0,
+     "ndcg": 0.0
+    },
+    {
+     "query": "masked intruder",
+     "style": "paraphrase",
+     "relevant": 6,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "parcel left at the front door",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 0.3333333333333333,
+     "mrr": 1.0,
+     "ndcg": 0.46927872602275644
+    },
+    {
+     "query": "suspicious bag abandoned near the gate",
+     "style": "paraphrase",
+     "relevant": 6,
+     "hit_at_k": 0.8333333333333334,
+     "mrr": 1.0,
+     "ndcg": 0.8829374068620365
+    },
+    {
+     "query": "gate left open",
+     "style": "exact",
+     "relevant": 4,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "warehouse door open",
+     "style": "exact",
+     "relevant": 13,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "dark SUV arriving with its lights off",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 0.9066276098484507
+    },
+    {
+     "query": "delivery van",
+     "style": "exact",
+     "relevant": 2,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "wild animals in the garden",
+     "style": "paraphrase",
+     "relevant": 3,
+     "hit_at_k": 1.0,
+     "mrr": 0.5,
+     "ndcg": 0.6653497124326151
+    },
+    {
+     "query": "security guard",
+     "style": "exact",
+     "relevant": 3,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "man carrying a ladder",
+     "style": "exact",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "workers using a forklift",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "people trying to open doors",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "the property manager's white Toyota",
+     "style": "paraphrase",
+     "relevant": 32,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "gardener",
+     "style": "exact",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    },
+    {
+     "query": "courier dropping off a parcel",
+     "style": "paraphrase",
+     "relevant": 1,
+     "hit_at_k": 1.0,
+     "mrr": 1.0,
+     "ndcg": 1.0
+    }
+   ]
+  }
+ }
+}

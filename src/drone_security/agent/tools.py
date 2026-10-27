@@ -67,6 +67,7 @@ class AnalystToolkit:
                 "entity_id": e["entity_id"], "name": e["display_name"], "category": e["category"],
                 "visit_count": e["visit_count"], "sightings": e["sightings"],
                 "reid_confidence": e["mean_confidence"],
+                "known_vehicle": self._known_owner(e),
                 "visits": [{"start": v["start"][11:16], "end": v["end"][11:16], "zones": v["zones"], "left": v["left"],
                             "frame_ids": _ends(v["frame_ids"])} for v in e["visits"]],
                 "alerts": [{"time": a["ts"][11:16], "severity": a["severity_name"], "rule": a["rule_id"],
@@ -162,6 +163,12 @@ class AnalystToolkit:
         candidates.sort(key=lambda c: (c[0], c[1]["visit_count"], c[1]["sightings"]), reverse=True)
         best = candidates[0][0] if candidates else 0
         return [e for score, e in candidates if score == best]
+
+    def _known_owner(self, entity: dict) -> Optional[str]:
+        if entity["category"] != "vehicle":
+            return None
+        _, label, color, make, model, *_ = [None if part == "?" else part for part in entity["signature"].split("|")]
+        return self.config.is_known_vehicle(color, make, model, label)
 
     def _remember(self, result: dict) -> dict:
         self.retrieved_ids |= _frame_ids_in(result)

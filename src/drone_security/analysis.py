@@ -49,7 +49,8 @@ def summarize_video(index: FrameIndex) -> VideoSummary:
 
     parts = [f"{counts['person']} people", f"{counts['vehicle']} vehicles"]
     if frequent:
-        parts[1] += f" (the {frequent['display_name']} visited {frequent['visit_count']} times)"
+        visits = {2: "twice"}.get(frequent["visit_count"], f"{frequent['visit_count']} times")
+        parts[1] += f" (the {frequent['display_name']} visited {visits})"
     if counts["animal"]:
         parts.append(f"{counts['animal']} animals")
     sentence = (f"Across {stats['frames']} frames from {stats['first_ts'][11:16]} to {stats['last_ts'][11:16]}, "

@@ -42,7 +42,7 @@ def test_vehicle_visit_count_and_pronoun_follow_up(analyst):
 
 def test_two_blue_pickups_are_reported_as_different_vehicles(analyst):
     answer = analyst.ask("Was the blue Chevrolet Silverado the same vehicle as the blue Ford F150?")
-    assert answer.text.startswith("No")
+    assert answer.text.startswith("No") and "Blue Ford F150" in answer.text and "Silverado" in answer.text
 
 
 def test_alert_questions_cite_frames(analyst):
