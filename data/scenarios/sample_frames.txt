@@ -1,0 +1,9 @@
+Time: 00:01, Location: Gate, Frame 1: Person in dark hoodie loitering at gate
+Time: 00:04, Location: Gate, Frame 2: Person in dark hoodie still standing at gate
+Time: 00:07, Location: Gate, Frame 3: Person in dark hoodie pacing near gate
+Time: 09:14, Location: Gate, Frame 4: Blue Ford F150 truck entering through main gate
+Time: 09:40, Location: Garage, Frame 5: Blue Ford F150 leaving the garage
+Time: 12:00, Location: Garage, Frame 6: Blue Ford F150 spotted at garage
+Time: 14:30, Location: Front door, Frame 7: Courier drops off a package at front door
+Time: 22:45, Location: Gate, Frame 8: Main gate left open, no one around
+Time: 23:20, Location: Garage, Frame 9: Two people trying door handles at garage

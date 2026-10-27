@@ -1,0 +1,32 @@
+{
+  "property_name": "Riverside Logistics Yard",
+  "drone_id": "DOCK-01",
+  "home": {"lat": 18.520400, "lon": 73.856700},
+  "geofence_radius_m": 260,
+  "night_hours": {"start": "22:00", "end": "06:00"},
+  "business_hours": {"start": "08:00", "end": "19:00"},
+  "zones": [
+    {"id": "dock",       "name": "drone dock",  "lat": 18.520400, "lon": 73.856700, "radius_m": 20, "perimeter": false, "restricted": false},
+    {"id": "main_gate",  "name": "main gate",   "lat": 18.521500, "lon": 73.856700, "radius_m": 30, "perimeter": true,  "restricted": false},
+    {"id": "driveway",   "name": "driveway",    "lat": 18.521100, "lon": 73.856900, "radius_m": 30, "perimeter": false, "restricted": false},
+    {"id": "garage",     "name": "garage",      "lat": 18.520800, "lon": 73.857500, "radius_m": 25, "perimeter": false, "restricted": false},
+    {"id": "front_door", "name": "front door",  "lat": 18.520700, "lon": 73.856300, "radius_m": 20, "perimeter": false, "restricted": false},
+    {"id": "backyard",   "name": "backyard",    "lat": 18.519900, "lon": 73.856400, "radius_m": 35, "perimeter": false, "restricted": false},
+    {"id": "back_fence", "name": "back fence",  "lat": 18.519300, "lon": 73.856500, "radius_m": 40, "perimeter": true,  "restricted": false},
+    {"id": "warehouse",  "name": "warehouse",   "lat": 18.519800, "lon": 73.857600, "radius_m": 35, "perimeter": false, "restricted": true}
+  ],
+  "known_vehicles": [
+    {"color": "white", "make": "Toyota", "model": "Camry", "owner": "Property manager"},
+    {"color": "yellow", "label": "forklift", "owner": "Warehouse equipment"}
+  ],
+  "thresholds": {
+    "loiter_minutes": 5,
+    "visit_gap_minutes": 15,
+    "repeat_vehicle_visits": 2,
+    "alert_cooldown_minutes": 15,
+    "battery_low_pct": 25,
+    "battery_critical_pct": 15,
+    "min_patrol_altitude_m": 12,
+    "max_wind_mps": 11
+  }
+}

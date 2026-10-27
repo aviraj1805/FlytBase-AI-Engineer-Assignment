@@ -1,0 +1,9 @@
+# Core pipeline (simulation, tracking, rules, SQLite/FTS5 index, offline analyst) uses only the
+# Python standard library. These packages add the LLM agent, Claude perception and nicer CLI output.
+anthropic>=2.3.0            # Claude: structured frame analysis, vision captions, summaries
+langchain>=1.0              # create_agent (tool-calling agent loop)
+langchain-anthropic>=1.0    # ChatAnthropic
+langgraph>=1.0
+pydantic>=2.7               # structured-output schemas
+rich>=13                    # coloured CLI output (optional)
+pytest>=8                   # test suite
