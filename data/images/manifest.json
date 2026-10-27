@@ -1,0 +1,13 @@
+{
+ "note": "Hand-labelled expectations for the VLM check. Each image is replayed as a drone frame at the given zone and time so that the normal rules run on the VLM output. 'must' objects should be detected (attributes listed are checked); 'must_not' categories should not appear; 'alert' is the rule expected to fire, or null.",
+ "date": "2026-10-27",
+ "images": [
+  {"file": "01_blue_f150_traffic.jpg", "zone": "main_gate", "time": "09:14", "must": [{"category": "vehicle", "label": "truck", "color": "blue", "make": "Ford"}], "min_vehicles": 3, "must_not": [], "alert": null},
+  {"file": "02_parcel_doorstep.jpg", "zone": "front_door", "time": "10:07", "must": [{"category": "object", "label": "package"}], "must_not": ["person", "vehicle"], "alert": null},
+  {"file": "03_fence_climbers.jpg", "zone": "back_fence", "time": "02:14", "must": [{"category": "person", "action": "climbing"}], "must_not": [], "alert": "INTRUSION"},
+  {"file": "04_black_suv_driveway.jpg", "zone": "driveway", "time": "23:10", "must": [{"category": "vehicle", "label": "suv", "color": "black"}], "must_not": ["person"], "alert": "AFTER_HOURS_VEHICLE"},
+  {"file": "05_fox_lawn.jpg", "zone": "backyard", "time": "01:30", "must": [{"category": "animal", "label": "fox"}], "must_not": ["person", "vehicle"], "alert": null},
+  {"file": "06_forklift_loading_dock.jpg", "zone": "warehouse", "time": "12:30", "must": [{"category": "vehicle", "label": "forklift"}, {"category": "person"}], "must_not": [], "alert": null},
+  {"file": "07_empty_lane.jpg", "zone": "driveway", "time": "13:00", "must": [], "must_not": ["person", "vehicle"], "alert": null}
+ ]
+}

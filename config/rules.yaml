@@ -1,0 +1,190 @@
+# Alert rules, declared as data. The engine (src/drone_security/rules/engine.py) knows a
+# small, fixed vocabulary of conditions; a rule fires when ALL conditions under `when` hold
+# (and at least one entry of `any_of`, if given). Every condition that holds adds one clause
+# to the alert's plain-English explanation, so the explanation always matches the logic.
+#
+# scope: detection -> evaluated for every object the analyzer found in the frame
+#        telemetry -> evaluated once per frame on the drone's telemetry
+#
+# Detection conditions:  category, label_in, action_in, attributes_any, exclude_attributes,
+#   zone_is (perimeter | restricted), time (night | outside_business_hours),
+#   min_dwell_minutes, new_visit, min_visits_today, not_known_vehicle, no_person_in_zone
+# Telemetry conditions:  telemetry: [{field, op, value}], mode_not, mode_is
+#   (`value` may be "$geofence_radius_m" to read the property config)
+# Telemetry fields: battery_pct, altitude_m, wind_mps, gps_hdop, distance_from_home_m,
+#   speed_mps, plus jump_speed_mps (distance between consecutive GPS fixes / time).
+#
+# dedupe_by: which alerts count as "the same" for the cooldown:
+#   entity (default for detection rules) | zone | entity_zone | rule (default for telemetry rules)
+# An alert in cooldown is suppressed unless its severity is higher than the last one.
+
+defaults:
+  cooldown_minutes: 15
+
+rules:
+  # ------------------------------------------------------------------ security
+  - id: INTRUSION
+    title: Break-in behaviour
+    scope: detection
+    severity: critical
+    when:
+      category: person
+      action_in: [climbing, tampering]
+    dedupe_by: entity_zone        # a new access point is a new alert
+    message: "{subject} {action_text} at {zone}, {time}."
+    action: "Possible break-in in progress: notify the on-call guard and police, keep the drone on target and record."
+
+  - id: LOITERING
+    title: Person loitering
+    scope: detection
+    severity: medium
+    severity_at_night: high
+    when:
+      category: person
+      exclude_attributes: [uniform]
+      any_of:
+        - action_in: [loitering]   # the caption itself describes loitering
+        - min_dwell_minutes: 5     # or the tracker measured a long stay in one zone
+    message: "{subject} loitering at {zone}, {time}."
+    action: "Hover and keep the person in frame; play the deterrent announcement if they stay."
+
+  - id: RESTRICTED_ZONE
+    title: Person in a restricted zone outside business hours
+    scope: detection
+    severity: high
+    when:
+      category: person
+      zone_is: restricted
+      time: outside_business_hours
+      exclude_attributes: [uniform]
+    message: "{subject} in restricted area ({zone}) outside business hours, {time}."
+    action: "Check access-control logs for an authorised entry; otherwise dispatch a guard."
+
+  - id: AFTER_HOURS_PERSON
+    title: Unknown person on site at night
+    scope: detection
+    severity: high
+    when:
+      category: person
+      time: night
+      exclude_attributes: [uniform]
+    message: "{subject} at {zone} during night hours, {time}."
+    action: "Verify identity on the live feed; dispatch a guard if not recognised."
+
+  - id: AFTER_HOURS_VEHICLE
+    title: Unrecognised vehicle arriving at night
+    scope: detection
+    severity: medium
+    when:
+      category: vehicle
+      time: night
+      new_visit: true
+      not_known_vehicle: true
+    message: "Unrecognised {subject} at {zone} after hours, {time}."
+    action: "Capture the plate with a zoom pass; confirm with the property manager whether a visit was expected."
+
+  - id: REPEAT_VEHICLE
+    title: Same vehicle entering repeatedly in one day
+    scope: detection
+    severity: low
+    when:
+      category: vehicle
+      new_visit: true
+      min_visits_today: 2
+      not_known_vehicle: true
+    message: "{subject} entered {visit_count_text} today ({visit_times}), {time}."
+    action: "Check whether repeat visits are expected (deliveries, contractors); whitelist the vehicle if it is."
+
+  - id: UNATTENDED_OBJECT
+    title: Package or bag left unattended
+    scope: detection
+    severity: medium
+    when:
+      category: object
+      label_in: [package, bag, suitcase, backpack]
+      min_dwell_minutes: 15
+      no_person_in_zone: true
+    message: "{subject} unattended at {zone} for {dwell_min} min, {time}."
+    action: "Send staff to check the item from a distance; do not move it if it looks suspicious."
+
+  - id: ACCESS_OPEN
+    title: Gate or door left open outside business hours
+    scope: detection
+    severity: medium
+    cooldown_minutes: 240         # a reminder every 4 h while it stays open, not every patrol pass
+    when:
+      category: infrastructure
+      attributes_any: [open]
+      time: outside_business_hours
+    dedupe_by: zone
+    message: "{label} left open at {zone}, {time}."
+    action: "Close it remotely if motorised; otherwise send staff to secure it."
+
+  # ------------------------------------------------------------------ drone health
+  - id: BATTERY_CRITICAL
+    title: Drone battery critical
+    scope: telemetry
+    severity: high
+    when:
+      mode_not: [docked]
+      telemetry:
+        - {field: battery_pct, op: "<=", value: 15}
+    message: "Drone battery critical ({battery_pct:.0f}%) over {zone}, {time}."
+    action: "Return to dock now."
+
+  - id: BATTERY_LOW
+    title: Drone battery low
+    scope: telemetry
+    severity: medium
+    cooldown_minutes: 60          # the battery only gets lower; BATTERY_CRITICAL covers the escalation
+    when:
+      mode_not: [docked]
+      telemetry:
+        - {field: battery_pct, op: "<=", value: 25}
+        - {field: battery_pct, op: ">", value: 15}
+    message: "Drone battery low ({battery_pct:.0f}%) over {zone}, {time}."
+    action: "Finish the current waypoint, then return to dock to recharge."
+
+  - id: GEOFENCE
+    title: Drone outside the property geofence
+    scope: telemetry
+    severity: high
+    when:
+      telemetry:
+        - {field: distance_from_home_m, op: ">", value: "$geofence_radius_m"}
+    message: "Drone {distance_from_home_m:.0f} m from dock, outside the geofence, {time}."
+    action: "Trigger return-to-launch; check GPS health and wind drift."
+
+  - id: GPS_DRIFT
+    title: GPS position unreliable
+    scope: telemetry
+    severity: medium
+    when:
+      mode_not: [docked]
+      any_of:
+        - telemetry: [{field: gps_hdop, op: ">", value: 3.0}]
+        - telemetry: [{field: jump_speed_mps, op: ">", value: 25}]
+    message: "GPS drift suspected over {zone} (HDOP {gps_hdop:.1f}), {time}."
+    action: "Hold position on visual/optical-flow positioning; return to dock if HDOP stays above 3."
+
+  - id: LOW_ALTITUDE
+    title: Drone below minimum patrol altitude
+    scope: telemetry
+    severity: medium
+    when:
+      mode_is: [patrol]
+      telemetry:
+        - {field: altitude_m, op: "<", value: 12}
+    message: "Drone at {altitude_m:.0f} m over {zone}, below the 12 m minimum, {time}."
+    action: "Climb to patrol altitude; check for obstacles and barometer drift."
+
+  - id: HIGH_WIND
+    title: Wind above the safe flight limit
+    scope: telemetry
+    severity: medium
+    when:
+      mode_not: [docked]
+      telemetry:
+        - {field: wind_mps, op: ">=", value: 11}
+    message: "High wind {wind_mps:.1f} m/s at {zone}, {time}."
+    action: "Shorten the patrol loop and hold at the dock until the wind drops below the limit."

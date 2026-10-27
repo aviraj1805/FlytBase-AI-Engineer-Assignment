@@ -1,46 +1,35 @@
-"""LangChain tool-calling agent backed by Claude.
+"""LangChain tool-calling agent backed by Gemini.
 
-The agent gets the working-memory block (see context.py) in its system prompt and the
-AnalystToolkit methods as tools for anything deeper. Conversation history is kept
-across `ask` calls, so follow-ups ("when did it leave?") resolve against earlier turns.
+The agent gets the hierarchical memory (day/hour summaries, rolling window) in its system
+prompt and the five toolkit methods as tools for anything finer. Conversation history is
+kept across `ask` calls, so follow-ups ("when did it leave?") resolve against earlier turns.
+After each answer the cited frame ids are checked against what the tools returned.
 """
 from __future__ import annotations
 
 import inspect
-from typing import Any
+from typing import Any, Optional
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain.agents import create_agent
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.tools import StructuredTool
 
-from ..llm import DEFAULT_MODEL, FALLBACK_BETA
+from .grounding import NOT_ENOUGH_EVIDENCE, check_citations, cited_frame_ids
 from .offline import AgentAnswer
 from .tools import TOOL_NAMES, AnalystToolkit
 
-try:  # LangChain >= 1.0
-    from langchain.agents import create_agent as _create_agent
-
-    def _build_agent(model, tools, system_prompt):
-        return _create_agent(model=model, tools=tools, system_prompt=system_prompt)
-except ImportError:  # older stacks: LangGraph's prebuilt ReAct agent
-    from langgraph.prebuilt import create_react_agent as _create_react_agent
-
-    def _build_agent(model, tools, system_prompt):
-        return _create_react_agent(model, tools, prompt=system_prompt)
-
-
 SYSTEM_PROMPT = """You are the security analyst for a docked patrol drone that monitors one property.
-You answer the operator's questions about the drone's footage, telemetry and alerts, and recommend actions.
+You answer the operator's questions about the drone's footage, telemetry and alerts.
 
-How to work:
-- The working memory below is a bounded digest. For specifics (exact times, counts, captions, telemetry),
-  call the tools; they query the full frame-by-frame index. Prefer one well-targeted tool call over many.
-- Ground every claim in tool results or the working memory. Quote times as HH:MM and name zones.
-  If the data does not answer the question, say so instead of guessing.
-- Bare clock times ("00:01") refer to the footage day. Night hours and zone types are in the working memory.
-- When asked for recommendations, prioritise: immediate safety/intrusion response, then identities to
-  verify, then hardening of the site or the patrol plan. Be concrete and short.
-- Answer in plain text, concise: a direct answer first, then supporting detail as a short list if useful.
+Rules:
+- Use ONLY facts from the working memory below and from tool results. Never use outside knowledge or guess.
+- Cite every fact with the frame id it comes from, written exactly as [f123]. Only cite frame ids that appear in
+  the working memory or in a tool result.
+- If the tools and memory do not contain the answer, reply exactly "{not_enough}" and say briefly what is missing.
+- The working memory is a summary. For exact times, counts, captions or telemetry, call a tool.
+  Prefer one well-targeted tool call; drill down with summarize_window(start, end) or query_frames.
+- Bare clock times ("00:01") refer to the footage day. Zones and night/business hours are in the memory.
+- Answer in plain text: the direct answer first, then the supporting detail. Be concise.
 
 # Working memory
 {context}
@@ -48,22 +37,26 @@ How to work:
 
 
 class LangChainAnalyst:
-    mode = "claude"
+    mode = "gemini"
 
-    def __init__(self, toolkit: AnalystToolkit, context_text: str, *, model: str = DEFAULT_MODEL, llm: Any = None):
+    def __init__(self, toolkit: AnalystToolkit, context_text: str, *, llm: Any = None, model: Optional[str] = None,
+                 api_key: Optional[str] = None):
         self.toolkit = toolkit
+        self.context_ids = cited_frame_ids(context_text)
         self.tools = [_as_tool(getattr(toolkit, name)) for name in TOOL_NAMES]
-        self.llm = llm or ChatAnthropic(
-            model=model,
-            max_tokens=16000,
-            effort="medium",  # Opus 5.5 always thinks; effort is the depth/cost control
-            betas=[FALLBACK_BETA],  # routes through client.beta.messages.create
-            model_kwargs={"fallbacks": "default"},  # server-side retry if a safety classifier declines
-        )
-        self.agent = _build_agent(self.llm, self.tools, SYSTEM_PROMPT.format(context=context_text))
+        if llm is None:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            llm = ChatGoogleGenerativeAI(model=model, google_api_key=api_key, temperature=0.0)
+        self.llm = llm
+        prompt = SYSTEM_PROMPT.replace("{not_enough}", NOT_ENOUGH_EVIDENCE).replace("{context}", context_text)
+        self.agent = create_agent(model=self.llm, tools=self.tools, system_prompt=prompt)
         self.history: list[BaseMessage] = []
+        self.last_grounding: dict = {}
+        self.last_usage: dict = {}
 
     def ask(self, question: str) -> AgentAnswer:
+        self.toolkit.retrieved_ids = set()
         result = self.agent.invoke({"messages": [*self.history, HumanMessage(question)]})
         messages: list[BaseMessage] = result["messages"]
         new = messages[len(self.history) + 1:]
@@ -71,7 +64,11 @@ class LangChainAnalyst:
 
         calls = [(c["name"], c.get("args", {})) for m in new if isinstance(m, AIMessage) for c in (m.tool_calls or [])]
         final = next((m for m in reversed(new) if isinstance(m, AIMessage) and not m.tool_calls), None)
-        return AgentAnswer(_text(final) if final else "(no answer)", self.mode, calls)
+        text = _text(final) if final else NOT_ENOUGH_EVIDENCE
+        self.last_grounding = check_citations(text, self.toolkit.retrieved_ids | self.context_ids)
+        self.last_usage = _usage(new)
+        self.last_usage["tool_messages"] = sum(isinstance(m, ToolMessage) for m in new)
+        return AgentAnswer(text, self.mode, calls)
 
     def reset(self) -> None:
         self.history = []
@@ -83,10 +80,21 @@ def _as_tool(method) -> StructuredTool:
 
 
 def _text(message: AIMessage) -> str:
-    """Final answer text; Claude returns content blocks (thinking + text), keep only the text."""
+    """Final answer text; content may be a string or a list of content blocks."""
     if isinstance(message.content, str):
         return message.content.strip()
-    return "".join(b.get("text", "") for b in message.content if isinstance(b, dict) and b.get("type") == "text").strip()
+    parts = [b.get("text", "") if isinstance(b, dict) else str(b) for b in message.content]
+    return "".join(p for p in parts if p).strip()
 
 
-__all__ = ["LangChainAnalyst"]
+def _usage(messages: list[BaseMessage]) -> dict:
+    """Sum the token usage LangChain reports on each model response of this turn."""
+    prompt = output = 0
+    for m in messages:
+        meta = getattr(m, "usage_metadata", None) or {}
+        prompt += meta.get("input_tokens", 0)
+        output += meta.get("output_tokens", 0)
+    return {"prompt_tokens": prompt, "output_tokens": output, "model_calls": sum(isinstance(m, AIMessage) for m in messages)}
+
+
+__all__ = ["LangChainAnalyst", "SYSTEM_PROMPT"]

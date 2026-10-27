@@ -1,0 +1,223 @@
+# One scripted day at Riverside Logistics Yard, the input to the scenario generator.
+#
+# The generator (src/drone_security/scenario.py) turns this script into
+#   frames.jsonl        what the drone sends: time, caption, telemetry (no labels)
+#   ground_truth.json   what really happened: per-frame objects with true identities,
+#                       and the alert incidents a correct system must raise
+# so the system under test never sees the labels it is scored against.
+#
+# Captions list several paraphrases; the seed picks one per frame. Some paraphrases
+# are deliberately harder (no make/model, unusual verbs) so that perception and
+# re-identification errors show up in the evaluation instead of being hidden.
+
+date: "2026-10-27"
+
+patrol:
+  cadence_minutes: 2                 # one sampled frame every 2 minutes while patrolling
+  route: [main_gate, driveway, garage, warehouse, back_fence, backyard, front_door]
+  altitude_m: 30
+  battery_drain_pct_per_min: 0.40    # 100% -> 28% over a normal 180-minute sortie
+  # Docked for charging (one frame on landing, one on take-off). The first sortie runs long
+  # because the drone stays on the 02:14 intruder; that is what drains the battery.
+  dock_windows:
+    - ["03:40", "04:05"]
+    - ["07:05", "07:30"]
+    - ["10:30", "10:55"]
+    - ["13:55", "14:20"]
+    - ["17:20", "17:45"]
+    - ["20:45", "21:10"]
+  quiet_captions:
+    main_gate: ["Main gate closed, street outside quiet", "Quiet at the main gate, gate shut", "Main gate shut, no one around"]
+    driveway: ["Empty driveway, no vehicles", "Driveway clear", "No vehicles in the driveway"]
+    garage: ["Garage door closed, no activity", "Garage area quiet", "Nothing moving around the garage"]
+    warehouse: ["Warehouse loading bay quiet", "Warehouse doors shut, no activity", "Loading bay empty"]
+    back_fence: ["Back fence intact, no one nearby", "Rear fence line clear", "Back fence quiet"]
+    backyard: ["Backyard clear, no movement", "Lawn empty", "Backyard quiet"]
+    front_door: ["Front porch clear", "Front door closed, porch empty", "Nobody at the front door"]
+
+# True identities. Detections are scored against these keys.
+entities:
+  hoodie:     {category: person,  label: person, color: dark,  clothing: [hoodie]}
+  intruder:   {category: person,  label: person, color: black, clothing: [jacket], masked: true}
+  guard:      {category: person,  label: person, clothing: [uniform]}
+  courier:    {category: person,  label: person, color: red,   clothing: [jacket]}
+  staffer:    {category: person,  label: person, color: gray,  clothing: [sweater]}
+  hivis:      {category: person,  label: person, clothing: [hi-vis vest]}
+  workers:    {category: person,  label: person, count: 2}
+  gardener:   {category: person,  label: person, color: green, clothing: [cap]}
+  dropper:    {category: person,  label: person, color: gray,  clothing: [hoodie]}
+  visitor:    {category: person,  label: person, color: blue,  clothing: [shirt]}
+  ladderman:  {category: person,  label: person, color: gray,  clothing: [t-shirt]}
+  suv_pair:   {category: person,  label: person, count: 2}
+  f150:       {category: vehicle, label: truck,  color: blue,  make: Ford,      model: F150}
+  silverado:  {category: vehicle, label: truck,  color: blue,  make: Chevrolet, model: Silverado}
+  camry:      {category: vehicle, label: car,    color: white, make: Toyota,    model: Camry}
+  courier_van: {category: vehicle, label: van,   color: white}
+  suv:        {category: vehicle, label: suv,    color: black}
+  forklift:   {category: vehicle, label: forklift, color: yellow}
+  package:    {category: object,  label: package}
+  bag:        {category: object,  label: bag,    color: black}
+  wh_door:    {category: infrastructure, label: door}
+  gate:       {category: infrastructure, label: gate}
+  fox:        {category: animal,  label: fox}
+  deer:       {category: animal,  label: deer}
+  dog:        {category: animal,  label: dog}
+
+# Things that stay put for a while. Patrol frames over that zone in that window show them
+# (instead of a quiet caption), so a parked truck is seen again on every patrol pass.
+scenes:
+  - {zone: warehouse, from: "02:22", to: "05:50", captions: ["Warehouse side door still open, no one visible", "Warehouse side door ajar, loading bay dark"], objects: [{entity: wh_door, state: open}]}
+  - {zone: driveway,  from: "07:52", to: "16:55", captions: ["White Toyota Camry parked in the driveway", "White Camry parked in driveway, engine off"], objects: [{entity: camry, action: parked}]}
+  - {zone: garage,    from: "09:17", to: "09:39", captions: ["Blue Ford F150 parked at the garage", "Blue F-150 pickup parked by the garage"], objects: [{entity: f150, action: parked}]}
+  - {zone: front_door, from: "10:08", to: "10:16", captions: ["Package left at the front door, no people visible", "Parcel sitting on the front porch"], objects: [{entity: package}]}
+  - {zone: warehouse, from: "11:03", to: "11:24", captions: ["Blue Chevrolet Silverado parked at the warehouse loading bay", "Blue Silverado pickup parked by the loading bay"], objects: [{entity: silverado, action: parked}]}
+  - {zone: main_gate, from: "14:35", to: "15:19", captions: ["Black bag left by the main gate, nobody around", "Unattended black bag lying at the main gate"], objects: [{entity: bag}]}
+  - {zone: garage,    from: "16:48", to: "17:09", captions: ["Blue Ford F150 parked at the garage", "Blue Ford F-150 truck parked at garage"], objects: [{entity: f150, action: parked}]}
+  - {zone: main_gate, from: "22:46", to: "23:39", captions: ["Main gate standing open, no one around", "Main gate left open, street quiet"], objects: [{entity: gate, state: open}]}
+
+# Scripted moments. Each beat is one frame at an exact time, replacing any patrol frame
+# within a minute of it. `telemetry` overrides the simulated drone state for that frame.
+episodes:
+  - name: midnight_loitering
+    beats:
+      - {at: "00:01", zone: main_gate, captions: ["Person in dark hoodie loitering near the main gate", "Person in a dark hoodie loitering at the main gate"], objects: [{entity: hoodie, action: loitering}]}
+      - {at: "00:03", zone: main_gate, captions: ["Person in dark hoodie standing at the main gate, looking at the keypad", "Person in dark hoodie still standing at the main gate"], objects: [{entity: hoodie, action: standing}]}
+      - {at: "00:05", zone: main_gate, captions: ["Person in dark hoodie pacing near the main gate", "Person in dark hoodie walking back and forth at the main gate"], objects: [{entity: hoodie, action: loitering}]}
+      - {at: "00:07", zone: main_gate, captions: ["Person in dark hoodie still standing at the main gate", "Person in dark hoodie waiting by the main gate"], objects: [{entity: hoodie, action: standing}]}
+      - {at: "00:09", zone: main_gate, captions: ["Person in dark hoodie walking away from the main gate", "Person in dark hoodie leaving the main gate area"], objects: [{entity: hoodie, action: exiting}]}
+
+  - name: fox
+    beats:
+      - {at: "01:30", zone: backyard, captions: ["Fox crossing the backyard lawn", "A fox running across the backyard"], objects: [{entity: fox}]}
+
+  - name: warehouse_intrusion
+    beats:
+      - {at: "02:14", zone: back_fence, captions: ["Masked person in black jacket climbing the back fence", "Masked man in a black jacket scaling the back fence"], objects: [{entity: intruder, action: climbing}]}
+      - {at: "02:15", zone: warehouse,  captions: ["Masked person in black jacket running toward the warehouse", "Masked man in black jacket running to the warehouse"], objects: [{entity: intruder, action: running}]}
+      - {at: "02:16", zone: warehouse,  captions: ["Masked person in black jacket prying at the warehouse side door", "Masked man in black jacket forcing the warehouse side door"], objects: [{entity: intruder, action: tampering}]}
+      - {at: "02:18", zone: warehouse,  captions: ["Masked person in black jacket inside the warehouse loading bay", "Masked man in black jacket standing in the loading bay"], objects: [{entity: intruder, action: standing}]}
+      - {at: "02:20", zone: warehouse,  captions: ["Warehouse side door left open, no people visible", "Warehouse side door ajar, nobody in sight"], objects: [{entity: wh_door, state: open}]}
+      - {at: "02:36", zone: back_fence, captions: ["Masked person in black jacket running along the back fence", "Masked man in black jacket running beside the back fence"], objects: [{entity: intruder, action: running}]}
+      - {at: "02:38", zone: back_fence, captions: ["Masked person in black jacket climbing back over the back fence", "Masked man in black jacket climbing over the back fence"], objects: [{entity: intruder, action: climbing}]}
+      # GPS drift while hovering beyond the fence: fixes jump ~70 m and HDOP degrades
+      - {at: "02:50", zone: back_fence, captions: ["Dark field beyond the back fence, nothing visible"], objects: [], telemetry: {lat_offset_m: 70, lon_offset_m: 45, gps_hdop: 4.8}}
+      - {at: "02:52", zone: back_fence, captions: ["Dark field beyond the back fence, nothing visible"], objects: [], telemetry: {lat_offset_m: -65, lon_offset_m: 50, gps_hdop: 5.6}}
+      # drone follows the intruder past the property line (outside the 260 m geofence)
+      - {at: "03:00", zone: back_fence, captions: ["Wide shot of the field beyond the back fence, person no longer visible"], objects: [], telemetry: {lat: 18.51700, lon: 73.85650}}
+      - {at: "03:02", zone: back_fence, captions: ["Wide shot of the field beyond the back fence, nothing moving"], objects: [], telemetry: {lat: 18.51690, lon: 73.85660}}
+
+  - name: deer
+    beats:
+      - {at: "05:40", zone: backyard, captions: ["Deer grazing on the backyard lawn", "A deer grazing in the backyard"], objects: [{entity: deer}]}
+
+  - name: guard_closes_door
+    beats:
+      - {at: "05:50", zone: warehouse, captions: ["Security guard in uniform closing the warehouse side door", "Guard in uniform shutting the warehouse side door"], objects: [{entity: guard, action: walking}]}
+      - {at: "05:56", zone: main_gate, captions: ["Security guard in uniform checking the main gate", "Guard in uniform at the main gate"], objects: [{entity: guard, action: standing}]}
+
+  - name: manager_arrives
+    beats:
+      - {at: "07:50", zone: driveway, captions: ["White Toyota Camry arriving in the driveway", "White Toyota Camry pulls into the driveway"], objects: [{entity: camry, action: entering}]}
+
+  - name: f150_first_visit
+    beats:
+      - {at: "09:14", zone: main_gate, captions: ["Blue Ford F150 pickup truck entering through the main gate", "Blue Ford F-150 pickup driving in at the main gate"], objects: [{entity: f150, action: entering}]}
+      - {at: "09:16", zone: garage,    captions: ["Blue Ford F150 parked at the garage, man in hi-vis vest unloading tools", "Blue F150 parked at garage; worker in hi-vis vest unloading tools"], objects: [{entity: f150, action: parked}, {entity: hivis, action: unloading}]}
+      - {at: "09:40", zone: garage,    captions: ["Blue Ford F150 leaving the garage", "Blue Ford F-150 pulling out of the garage"], objects: [{entity: f150, action: exiting}]}
+      - {at: "09:42", zone: main_gate, captions: ["Blue Ford F150 driving out through the main gate", "Blue F150 exiting through the main gate"], objects: [{entity: f150, action: exiting}]}
+
+  - name: delivery
+    beats:
+      - {at: "10:05", zone: front_door, captions: ["Courier in red jacket drops off a package at the front door; white delivery van idling in the driveway", "Courier in a red jacket delivering a package to the front door, white van waiting in the driveway"], objects: [{entity: courier, action: delivering}, {entity: package}, {entity: courier_van, action: parked, zone: driveway}]}
+      - {at: "10:07", zone: driveway,   captions: ["White delivery van leaving the driveway", "White van driving out of the driveway"], objects: [{entity: courier_van, action: exiting}]}
+      - {at: "10:17", zone: front_door, captions: ["Woman in gray sweater picks up the package at the front door", "Staff member in gray sweater collecting the package from the front door"], objects: [{entity: staffer, action: walking}, {entity: package}]}
+
+  - name: silverado_visit
+    beats:
+      - {at: "11:00", zone: main_gate, captions: ["Blue Chevrolet Silverado pickup entering through the main gate", "Blue pickup truck entering through the main gate"], objects: [{entity: silverado, action: entering}]}
+      - {at: "11:02", zone: warehouse, captions: ["Blue Chevrolet Silverado parked at the warehouse loading bay", "Blue Silverado pickup parked at the warehouse"], objects: [{entity: silverado, action: parked}]}
+      - {at: "11:25", zone: main_gate, captions: ["Blue Chevrolet Silverado leaving through the main gate", "Blue Silverado driving out through the main gate"], objects: [{entity: silverado, action: exiting}]}
+
+  - name: warehouse_work
+    beats:
+      - {at: "12:30", zone: warehouse, captions: ["Two workers loading boxes onto a yellow forklift at the warehouse", "Two workers and a yellow forklift moving boxes at the warehouse"], objects: [{entity: workers, action: loading}, {entity: forklift}]}
+
+  - name: low_inspection_and_gardener
+    beats:
+      - {at: "13:00", zone: backyard, captions: ["Close inspection of the backyard sprinklers, no people"], objects: [], telemetry: {altitude_m: 8}}
+      - {at: "13:10", zone: backyard, captions: ["Gardener in green cap walking across the backyard", "Gardener in a green cap mowing the backyard lawn"], objects: [{entity: gardener, action: walking}]}
+
+  - name: unattended_bag
+    beats:
+      - {at: "14:30", zone: main_gate, captions: ["Person in gray hoodie carrying a black bag toward the main gate", "Person in a gray hoodie walking to the main gate with a black bag"], objects: [{entity: dropper, action: walking}]}
+      - {at: "14:32", zone: main_gate, captions: ["Person in gray hoodie leaves a black bag by the main gate and walks away", "Person in gray hoodie sets a black bag down at the main gate, then leaves"], objects: [{entity: dropper, action: exiting}, {entity: bag}]}
+      - {at: "14:41", zone: main_gate, captions: ["Black bag still by the main gate, nobody around"], objects: [{entity: bag}]}
+      - {at: "14:51", zone: main_gate, captions: ["Black bag still lying at the main gate, no one nearby"], objects: [{entity: bag}]}
+      - {at: "15:20", zone: main_gate, captions: ["Security guard in uniform picks up the black bag at the main gate"], objects: [{entity: guard, action: walking}, {entity: bag}]}
+
+  - name: wind_gusts
+    beats:
+      - {at: "15:10", zone: backyard, captions: ["Backyard clear, camera shaking in strong gusts"], objects: [], telemetry: {wind_mps: 12.4}}
+      - {at: "15:12", zone: backyard, captions: ["Backyard clear, strong gusts"], objects: [], telemetry: {wind_mps: 13.1}}
+
+  - name: short_visitor
+    beats:
+      - {at: "15:40", zone: main_gate, captions: ["Visitor in blue shirt standing at the main gate", "Person in a blue shirt waiting at the main gate"], objects: [{entity: visitor, action: standing}]}
+      - {at: "15:42", zone: main_gate, captions: ["Visitor in blue shirt walking in through the main gate", "Person in blue shirt entering through the main gate"], objects: [{entity: visitor, action: entering}]}
+
+  - name: f150_second_visit
+    beats:
+      - {at: "16:45", zone: main_gate, captions: ["Blue Ford F150 pulls in at the main gate", "Blue Ford F-150 entering through the main gate"], objects: [{entity: f150, action: entering}]}
+      - {at: "16:47", zone: garage,    captions: ["Blue Ford F150 parked at the garage, man in gray t-shirt carrying a ladder", "Blue F150 parked by the garage; man in gray t-shirt carrying a ladder"], objects: [{entity: f150, action: parked}, {entity: ladderman, action: walking}]}
+      - {at: "17:10", zone: main_gate, captions: ["Blue Ford F150 driving out through the main gate", "Blue Ford F150 leaving through the main gate"], objects: [{entity: f150, action: exiting}]}
+
+  - name: dog
+    beats:
+      - {at: "19:30", zone: backyard, captions: ["Dog running across the backyard", "A dog running on the backyard lawn"], objects: [{entity: dog}]}
+
+  - name: gate_left_open
+    beats:
+      - {at: "22:45", zone: main_gate, captions: ["Main gate left open, no one around", "Main gate standing open, nobody nearby"], objects: [{entity: gate, state: open}]}
+
+  - name: suv_at_night
+    beats:
+      - {at: "23:10", zone: driveway, captions: ["Black SUV with headlights off pulls into the driveway", "Black SUV entering the driveway with headlights off"], objects: [{entity: suv, action: entering}]}
+      - {at: "23:12", zone: driveway, captions: ["Two people get out of the black SUV and walk toward the garage", "Two people leave the black SUV and walk to the garage"], objects: [{entity: suv_pair, action: walking}, {entity: suv, action: parked}]}
+      - {at: "23:16", zone: garage,   captions: ["Two people trying the door handles at the garage", "Two people trying the garage door handles"], objects: [{entity: suv_pair, action: tampering}]}
+      - {at: "23:25", zone: main_gate, captions: ["Black SUV leaving through the main gate at speed", "Black SUV driving out through the main gate fast"], objects: [{entity: suv, action: exiting}]}
+      - {at: "23:40", zone: main_gate, captions: ["Main gate closed, street quiet"], objects: []}
+
+# Alert incidents a correct system must raise. A raised alert matches an incident when its
+# rule (or a rule folded into it by correlation) is listed, its time is inside the window,
+# and its zone matches when one is given. Times are inclusive.
+expected_alerts:
+  - {id: GT-01, rules: [LOITERING],          zone: main_gate,  from: "00:01", to: "00:12", entity: hoodie,   why: "Person loitering at the main gate around midnight"}
+  - {id: GT-02, rules: [AFTER_HOURS_PERSON], zone: main_gate,  from: "00:01", to: "00:12", entity: hoodie,   why: "Unknown person on site at night"}
+  - {id: GT-03, rules: [INTRUSION],          zone: back_fence, from: "02:14", to: "02:15", entity: intruder, why: "Masked person climbing the back fence"}
+  - {id: GT-04, rules: [AFTER_HOURS_PERSON], from: "02:14", to: "02:40", entity: intruder, why: "Unknown person on site at night"}
+  - {id: GT-05, rules: [RESTRICTED_ZONE],    zone: warehouse,  from: "02:15", to: "02:20", entity: intruder, why: "Unknown person in the restricted warehouse"}
+  - {id: GT-06, rules: [INTRUSION],          zone: warehouse,  from: "02:16", to: "02:20", entity: intruder, why: "Forcing the warehouse side door"}
+  - {id: GT-07, rules: [INTRUSION],          zone: back_fence, from: "02:36", to: "02:40", entity: intruder, why: "Intruder climbing back out over the fence"}
+  - {id: GT-08, rules: [ACCESS_OPEN],        zone: warehouse,  from: "02:18", to: "05:50", entity: wh_door,  why: "Warehouse side door left open after the break-in"}
+  - {id: GT-09, rules: [GPS_DRIFT],          from: "02:50", to: "02:54", why: "GPS fixes jump ~70 m with HDOP above 4"}
+  - {id: GT-10, rules: [GEOFENCE],           from: "03:00", to: "03:03", why: "Drone outside the 260 m geofence"}
+  - {id: GT-11, rules: [BATTERY_LOW],        from: "03:07", to: "03:33", why: "Battery between 15% and 25% during the extended sortie (03:07-03:32)"}
+  - {id: GT-12, rules: [BATTERY_CRITICAL],   from: "03:32", to: "03:40", why: "Battery at or below 15% until docking at 03:40"}
+  - {id: GT-13, rules: [LOW_ALTITUDE],       zone: backyard,   from: "13:00", to: "13:02", why: "Inspection pass at 8 m, below the 12 m minimum"}
+  - {id: GT-14, rules: [UNATTENDED_OBJECT],  zone: main_gate,  from: "14:46", to: "15:20", entity: bag,      why: "Bag left at the main gate for more than 15 minutes"}
+  - {id: GT-15, rules: [HIGH_WIND],          from: "15:10", to: "15:14", why: "Wind above 11 m/s"}
+  - {id: GT-16, rules: [REPEAT_VEHICLE],     zone: main_gate,  from: "16:45", to: "16:50", entity: f150,     why: "Same blue Ford F150 entering for the second time today"}
+  - {id: GT-17, rules: [ACCESS_OPEN],        zone: main_gate,  from: "22:45", to: "23:40", entity: gate,     why: "Main gate left open after hours"}
+  - {id: GT-18, rules: [AFTER_HOURS_VEHICLE], zone: driveway,  from: "23:10", to: "23:14", entity: suv,      why: "Unknown vehicle arriving at night"}
+  - {id: GT-19, rules: [AFTER_HOURS_PERSON], from: "23:12", to: "23:25", entity: suv_pair, why: "Two unknown people on site at night"}
+  - {id: GT-20, rules: [INTRUSION],          zone: garage,     from: "23:16", to: "23:25", entity: suv_pair, why: "Trying the garage door handles"}
+
+# Situations that must NOT raise a security alert (false-positive traps).
+benign:
+  - "05:50 uniformed guard at the warehouse and gate at night (staff whitelist)"
+  - "07:50 white Toyota Camry: known vehicle (property manager)"
+  - "10:05 courier package collected after 12 minutes (below the 15-minute unattended threshold)"
+  - "11:00 blue Chevrolet Silverado: a different blue pickup, one visit (must not be merged with the F150)"
+  - "12:30 workers in the restricted warehouse during business hours"
+  - "15:40 visitor at the gate for 2 minutes (below the loitering threshold)"
+  - "animals: fox 01:30, deer 05:40, dog 19:30"

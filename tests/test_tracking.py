@@ -1,79 +1,111 @@
-"""Re-identification, visit segmentation and dwell time."""
+"""Re-identification and visit tracking."""
 from datetime import datetime, timedelta
 
-from drone_security.models import Detection
+from drone_security.perception import RuleBasedAnalyzer
 from drone_security.tracking import EntityTracker
 
+parse = RuleBasedAnalyzer().parse
 T0 = datetime(2026, 10, 27, 9, 0)
 
 
-def truck(action=None, zone="garage"):
-    return Detection("vehicle", "truck", zone, color="blue", make="Ford", model="F150", action=action)
+def see(tracker, minutes, caption, zone="main_gate", frame_id=0):
+    det = parse(caption, default_zone=zone)[0]
+    return tracker.observe(det, T0 + timedelta(minutes=minutes), frame_id)
 
 
-def person(zone="main_gate", clothing="hoodie", color="dark"):
-    return Detection("person", "person", zone, color=color, attributes=[clothing] if clothing else [])
+def test_same_vehicle_is_one_entity_with_full_confidence():
+    t = EntityTracker()
+    a = see(t, 0, "Blue Ford F150 entering through the main gate")
+    b = see(t, 2, "Blue F-150 pickup parked at the garage", zone="garage")
+    assert a.entity is b.entity and b.confidence == 1.0
 
 
-def at(minutes):
-    return T0 + timedelta(minutes=minutes)
+def test_less_detailed_sighting_shortly_after_joins_the_same_entity():
+    t = EntityTracker()
+    a = see(t, 0, "Blue Ford F150 parked at the garage", zone="garage")
+    b = see(t, 3, "Blue pickup truck parked at the garage", zone="garage")
+    assert a.entity is b.entity
 
 
-def test_same_vehicle_is_one_entity():
-    tracker = EntityTracker()
-    first = tracker.observe(truck("entering"), at(0))
-    second = tracker.observe(truck("parked"), at(2))
-    assert first.is_new_entity and not second.is_new_entity
-    assert first.entity.entity_id == second.entity.entity_id == "V-001"
+def test_vague_description_after_the_vehicle_left_is_not_assumed_to_be_it():
+    t = EntityTracker()
+    f150 = see(t, 0, "Blue Ford F150 entering through the main gate")
+    see(t, 20, "Blue Ford F150 leaving through the main gate")
+    later = see(t, 120, "Blue pickup truck entering through the main gate")
+    assert later.entity is not f150.entity  # colour + type is not enough evidence after a gap
 
 
-def test_exit_then_return_counts_two_visits():
-    tracker = EntityTracker()
-    tracker.observe(truck("entering", "main_gate"), at(0))
-    tracker.observe(truck("exiting"), at(25))
-    update = tracker.observe(truck("parked"), at(180))
-    assert update.is_new_visit and len(update.entity.visits) == 2
+def test_full_description_after_a_gap_is_recognised_as_a_return_visit():
+    t = EntityTracker()
+    see(t, 0, "Blue Ford F150 entering through the main gate")
+    see(t, 20, "Blue Ford F150 leaving through the main gate")
+    back = see(t, 450, "Blue Ford F150 pulls in at the main gate")
+    assert not back.is_new_entity and back.is_new_visit and len(back.entity.visits) == 2
 
 
-def test_sparse_patrol_sightings_without_exit_stay_one_visit():
-    """A truck parked for an hour is seen on two patrol passes 40 min apart: still one visit."""
-    tracker = EntityTracker()
-    tracker.observe(truck("entering", "main_gate"), at(0))
-    tracker.observe(truck("parked"), at(40))
-    update = tracker.observe(truck("parked"), at(80))
-    assert not update.is_new_visit and len(update.entity.visits) == 1
+def test_conflicting_make_keeps_two_blue_pickups_apart():
+    t = EntityTracker()
+    f150 = see(t, 0, "Blue Ford F150 parked at the garage", zone="garage")
+    chevy = see(t, 5, "Blue Chevrolet Silverado parked at the garage", zone="garage")
+    assert chevy.entity is not f150.entity and chevy.is_new_entity
 
 
-def test_entering_after_a_gap_starts_new_visit_even_if_exit_was_missed():
-    tracker = EntityTracker()
-    tracker.observe(truck("parked"), at(0))
-    update = tracker.observe(truck("entering", "main_gate"), at(120))
-    assert update.is_new_visit
+def test_ambiguous_match_reports_lower_confidence():
+    t = EntityTracker()
+    see(t, 0, "Blue Ford F150 parked at the garage", zone="garage")
+    see(t, 1, "Blue Chevrolet Silverado parked at the garage", zone="garage")
+    vague = see(t, 3, "Blue pickup truck parked at the garage", zone="garage")
+    assert vague.confidence < 0.7  # both blue pickups are equally plausible
 
 
-def test_dwell_time_accumulates_while_continuously_observed():
-    tracker = EntityTracker(visit_gap=timedelta(minutes=15))
-    for minute in (0, 2, 4, 6):
-        update = tracker.observe(person(), at(minute))
-    assert update.dwell_seconds == 6 * 60
+def test_people_with_different_clothing_colours_are_different():
+    t = EntityTracker()
+    a = see(t, 0, "Person in dark hoodie standing at the main gate")
+    b = see(t, 2, "Person in gray hoodie standing at the main gate")
+    assert a.entity is not b.entity
 
 
-def test_dwell_resets_on_zone_change_and_after_unobserved_gap():
-    tracker = EntityTracker(visit_gap=timedelta(minutes=15))
-    tracker.observe(person(), at(0))
-    assert tracker.observe(person(zone="driveway"), at(5)).dwell_seconds == 0
-    assert tracker.observe(person(zone="driveway"), at(60)).dwell_seconds == 0  # not seen for 55 min
+def test_anonymous_person_in_the_same_zone_moments_later_is_the_same_track():
+    t = EntityTracker()
+    a = see(t, 0, "Person in dark hoodie standing at the main gate")
+    b = see(t, 2, "Person standing at the main gate")
+    c = see(t, 3, "Person walking in the backyard", zone="backyard")
+    assert a.entity is b.entity and c.entity is not a.entity
 
 
-def test_different_clothing_means_different_people():
-    tracker = EntityTracker()
-    a = tracker.observe(person(clothing="hoodie"), at(0))
-    b = tracker.observe(person(clothing="jacket", color="red"), at(1))
-    assert a.entity.entity_id != b.entity.entity_id
+def test_groups_and_individuals_are_not_merged():
+    t = EntityTracker()
+    a = see(t, 0, "Two people walking toward the garage", zone="garage")
+    b = see(t, 2, "Person walking at the garage", zone="garage")
+    assert a.entity is not b.entity
 
 
-def test_anonymous_people_are_kept_apart_by_zone():
-    tracker = EntityTracker()
-    a = tracker.observe(person(zone="main_gate", clothing=None, color=None), at(0))
-    b = tracker.observe(person(zone="back_fence", clothing=None, color=None), at(0))
-    assert a.entity.entity_id != b.entity.entity_id
+def test_static_objects_match_by_label_and_place():
+    t = EntityTracker()
+    a = see(t, 0, "Black bag left by the main gate")
+    b = see(t, 30, "Black bag still by the main gate")
+    c = see(t, 31, "Package left at the front door", zone="front_door")
+    assert a.entity is b.entity and c.entity is not a.entity
+    assert b.dwell_seconds == 30 * 60
+
+
+def test_dwell_resets_on_zone_change_and_after_an_unobserved_gap():
+    t = EntityTracker()
+    see(t, 0, "Person in dark hoodie standing at the main gate")
+    assert see(t, 4, "Person in dark hoodie standing at the main gate").dwell_seconds == 240
+    assert see(t, 6, "Person in dark hoodie walking in the driveway", zone="driveway").dwell_seconds == 0
+    assert see(t, 40, "Person in dark hoodie walking in the driveway", zone="driveway").dwell_seconds == 0
+
+
+def test_visit_evidence_frames_are_recorded():
+    t = EntityTracker()
+    see(t, 0, "Blue Ford F150 entering through the main gate", frame_id=10)
+    upd = see(t, 2, "Blue Ford F150 parked at the garage", zone="garage", frame_id=11)
+    assert upd.entity.visits[0].frame_ids == [10, 11] and upd.entity.zone_frame_ids == [11]
+
+
+def test_entities_beyond_the_reid_horizon_are_not_matched():
+    t = EntityTracker(reid_horizon=timedelta(days=1))
+    a = see(t, 0, "Blue Ford F150 entering through the main gate")
+    b = see(t, 3 * 24 * 60, "Blue Ford F150 entering through the main gate")
+    assert a.entity is not b.entity

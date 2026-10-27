@@ -1,4 +1,4 @@
-"""Property profile: zones, schedules, whitelists and alert thresholds."""
+"""Property profile: zones, schedules, known vehicles and tracker settings (alert rules live in rules.yaml)."""
 from __future__ import annotations
 
 import json
@@ -24,15 +24,10 @@ class Zone:
 
 
 @dataclass(frozen=True)
-class Thresholds:
-    loiter_minutes: float = 5
-    visit_gap_minutes: float = 15
-    repeat_vehicle_visits: int = 2
-    alert_cooldown_minutes: float = 15
-    battery_low_pct: float = 25
-    battery_critical_pct: float = 15
-    min_patrol_altitude_m: float = 12
-    max_wind_mps: float = 11
+class TrackingConfig:
+    visit_gap_minutes: float = 15  # unseen this long -> dwell restarts; entering after this -> new visit
+    max_open_visit_hours: float = 6  # no exit seen but gone this long -> next sighting is a new visit
+    reid_horizon_days: float = 7  # entities unseen for longer stop being re-identification candidates
 
 
 @dataclass(frozen=True)
@@ -58,7 +53,7 @@ class PropertyConfig:
     business: TimeWindow
     zones: list[Zone]
     known_vehicles: list[dict] = field(default_factory=list)
-    thresholds: Thresholds = field(default_factory=Thresholds)
+    tracking: TrackingConfig = field(default_factory=TrackingConfig)
 
     # ------------------------------------------------------------------ loading
     @classmethod
@@ -78,7 +73,7 @@ class PropertyConfig:
             business=_window(raw["business_hours"]),
             zones=[Zone(**z) for z in raw["zones"]],
             known_vehicles=raw.get("known_vehicles", []),
-            thresholds=Thresholds(**raw.get("thresholds", {})),
+            tracking=TrackingConfig(**raw.get("tracking", {})),
         )
 
     # ------------------------------------------------------------------ lookups

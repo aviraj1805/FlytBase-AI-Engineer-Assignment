@@ -63,8 +63,8 @@ ANIMALS: dict[str, str] = {
 }
 
 OBJECTS: dict[str, str] = {
-    "package": "package", "parcel": "package", "box": "package", "unattended bag": "bag",
-    "ladder": "ladder",
+    "package": "package", "parcel": "package", "box": "package", "bag": "bag", "suitcase": "suitcase",
+    "backpack": "backpack", "ladder": "ladder",
 }
 
 INFRASTRUCTURE: dict[str, str] = {"gate": "gate", "door": "door", "garage door": "garage door", "window": "window"}
@@ -74,7 +74,7 @@ OPEN_STATES = ("open", "opened", "ajar", "left open", "unlocked", "broken")
 CLOTHING: dict[str, str] = {
     "hi-vis vest": "hi-vis vest", "hoodie": "hoodie", "hooded": "hoodie", "jacket": "jacket", "coat": "coat",
     "raincoat": "raincoat", "vest": "vest", "uniform": "uniform", "cap": "cap", "hat": "hat",
-    "helmet": "helmet", "t-shirt": "t-shirt", "shirt": "shirt", "overalls": "overalls",
+    "helmet": "helmet", "t-shirt": "t-shirt", "shirt": "shirt", "overalls": "overalls", "sweater": "sweater",
 }
 CARRIED: dict[str, str] = {
     "backpack": "backpack", "bag": "bag", "crowbar": "crowbar", "bolt cutters": "bolt cutters",
@@ -86,7 +86,8 @@ CARRIED: dict[str, str] = {
 ACTIONS: list[tuple[str, str]] = [
     ("climbing", "climbing"), ("climbs", "climbing"), ("scaling", "climbing"), ("jumping over", "climbing"),
     ("tampering", "tampering"), ("prying", "tampering"), ("forcing", "tampering"), ("cutting", "tampering"),
-    ("breaking", "tampering"), ("trying door handles", "tampering"), ("trying the handle", "tampering"),
+    ("breaking", "tampering"), ("door handles", "tampering"), ("trying the handle", "tampering"),
+    ("trying the door", "tampering"),
     ("peering", "peering"), ("looking into", "peering"), ("photographing", "peering"),
     ("loitering", "loitering"), ("lingering", "loitering"), ("pacing", "loitering"),
     ("hanging around", "loitering"), ("standing", "standing"), ("waiting", "standing"),
@@ -119,3 +120,5 @@ ZONE_ALIASES: list[tuple[str, str]] = [
 ]
 
 NEGATIONS = ("no", "without", "zero", "nobody", "none")
+# "person no longer visible": negation that follows the noun
+POST_NEGATIONS = ("no longer visible", "not visible", "no longer in view", "out of sight", "nowhere to be seen")

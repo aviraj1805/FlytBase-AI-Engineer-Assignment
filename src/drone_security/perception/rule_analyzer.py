@@ -32,19 +32,23 @@ _RE_MODELS = [
 ]
 _RE_TYPE_AFTER = re.compile(rf"^\s+({_alternation(lx.VEHICLE_TYPES)})\b")
 _RE_OPEN_ACCESS = re.compile(
-    rf"\b(?:({_alternation(lx.INFRASTRUCTURE)})\s+(?:is\s+|was\s+|has been\s+|been\s+)?(?:left\s+)?"
+    # "door left open", "door still open", "gate standing wide open"
+    rf"\b(?:({_alternation(lx.INFRASTRUCTURE)})\s+(?:is\s+|was\s+|has been\s+|been\s+)?(?:left\s+|still\s+|standing\s+)?(?:wide\s+)?"
     rf"({_alternation(lx.OPEN_STATES)})|({_alternation(lx.OPEN_STATES)})\s+({_alternation(lx.INFRASTRUCTURE)}))\b"
 )
 _RE_ZONE = re.compile(rf"\b({_alternation(p for p, _ in lx.ZONE_ALIASES)})\b")
 _ZONE_LOOKUP = dict(lx.ZONE_ALIASES)
 _RE_COLOR = re.compile(rf"\b({_alternation(lx.COLORS)})\b")
 _RE_CLOTHING = re.compile(rf"\b({_alternation(lx.CLOTHING)})\b")
-_RE_CARRIED = re.compile(rf"\b(?:carrying|holding|with|carries|holds)\s+(?:a\s+|an\s+|the\s+|some\s+)?({_alternation(lx.CARRIED)})\b")
+# "carrying a black bag": one optional adjective (usually a colour) between article and item
+_RE_CARRIED = re.compile(
+    rf"\b(?:carrying|holding|with|carries|holds)\s+(?:a\s+|an\s+|the\s+|some\s+)?(?:[a-z-]+\s+)?({_alternation(lx.CARRIED)})\b")
 _RE_BACKPACK = re.compile(r"\bbackpack\b")
 _RE_COUNT = re.compile(rf"(?<![:\d])\b(\d{{1,2}}|{_alternation(lx.NUMBER_WORDS)})\s+(?:\w+\s+){{0,2}}$")
 _RE_NEGATED = re.compile(rf"\b({'|'.join(lx.NEGATIONS)})\s+(?:\w+\s+){{0,2}}$")
+_RE_POST_NEGATED = re.compile(rf"^\s*(?:is\s+|was\s+)?(?:{_alternation(lx.POST_NEGATIONS)})\b")
 _RE_COORDINATION = re.compile(r"^[\s,]*(?:or|and|nor)?[\s,]*(?:any\s+)?$")
-_RE_ATTACH = re.compile(r"\b(?:carrying|holding|with|carries|holds)\s+(?:a\s+|an\s+|the\s+|some\s+)?$")
+_RE_ATTACH = re.compile(r"\b(?:carrying|holding|with|carries|holds)\s+(?:a\s+|an\s+|the\s+|some\s+)?(?:[a-z-]+\s+)?$")
 _RE_FRAME_PREFIX = re.compile(r"^\s*frame\s*#?\s*\d+\s*[:\-|]\s*")
 _SENTENCE_END = re.compile(r"[.;!?]")
 _INFRA_ZONE = {"gate": "main_gate", "garage door": "garage", "door": "front_door"}
@@ -68,7 +72,7 @@ class RuleBasedAnalyzer:
     name = "rules"
 
     def analyze(self, frame: Frame) -> list[Detection]:
-        return self.parse(frame.description, default_zone=frame.telemetry.zone)
+        return self.parse(frame.description, default_zone=frame.zone)
 
     # ------------------------------------------------------------------ parsing
     def parse(self, description: str, default_zone: str = "open_area") -> list[Detection]:
@@ -89,7 +93,8 @@ class RuleBasedAnalyzer:
                 after = after[:sentence_break.start()]
 
             # "no vehicles or people": negation carries across a coordinated list
-            if _RE_NEGATED.search(before) or (prev_negated and _RE_COORDINATION.match(before)):
+            if (_RE_NEGATED.search(before) or _RE_POST_NEGATED.match(after)
+                    or (prev_negated and _RE_COORDINATION.match(before))):
                 prev_negated = True
                 continue
             prev_negated = False

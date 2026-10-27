@@ -34,12 +34,14 @@ class Telemetry:
     lat: float
     lon: float
     altitude_m: float
-    heading_deg: float
-    speed_mps: float
     battery_pct: float
-    zone: str
-    mode: str = "patrol"  # patrol | hover | rtl (return to launch) | docked
+    heading_deg: float = 0.0
+    speed_mps: float = 0.0
     wind_mps: float = 0.0
+    gps_hdop: float = 0.8  # horizontal dilution of precision: above ~2 the fix is unreliable
+    mode: str = "patrol"  # patrol | docked | rtl (return to launch)
+    # derived on ingest from lat/lon, never sent by the drone
+    zone: str = "open_area"
     distance_from_home_m: float = 0.0
 
 
@@ -48,15 +50,23 @@ class Frame:
     frame_id: int
     timestamp: datetime
     description: str  # simulated caption, or a VLM caption of a real image
-    telemetry: Telemetry
-    source: str = "simulated"  # simulated | vlm:claude | vlm:blip
+    telemetry: Optional[Telemetry] = None  # None when the drone's telemetry packet was lost
+    source: str = "simulated"  # simulated | vlm:gemini
     image_path: Optional[str] = None
+    caption_zone: Optional[str] = None  # zone named by the operator/feed ("Location: Gate"), if any
+
+    @property
+    def zone(self) -> str:
+        """Where the camera is looking: the feed's stated location, else the drone's GPS zone."""
+        if self.caption_zone:
+            return self.caption_zone
+        return self.telemetry.zone if self.telemetry else "unknown"
 
 
 @dataclass
 class Detection:
     category: str  # person | vehicle | animal | object | infrastructure
-    label: str  # truck, car, person, dog, package, gate ...
+    label: str  # truck, car, van, person, dog, package, bag, gate, door ...
     zone: str
     color: Optional[str] = None
     make: Optional[str] = None
@@ -64,8 +74,9 @@ class Detection:
     attributes: list[str] = field(default_factory=list)
     action: Optional[str] = None
     count: int = 1
-    confidence: float = 0.9
+    confidence: float = 0.9  # perception confidence (how sure the analyzer is about this object)
     entity_id: Optional[str] = None  # assigned by the tracker
+    track_confidence: Optional[float] = None  # how sure the tracker is that this is entity_id
 
     @property
     def display_name(self) -> str:
@@ -78,7 +89,7 @@ class Detection:
             noun = "Person" if self.count == 1 else f"{self.count} people"
             if "masked" in self.attributes:
                 noun = "Masked person" if self.count == 1 else f"{self.count} masked people"
-            clothing = next((a for a in self.attributes if a in _CLOTHING_HINT), None)
+            clothing = next((a for a in self.attributes if a in CLOTHING_WORDS), None)
             if clothing:
                 return f"{noun} in {self.color + ' ' if self.color else ''}{clothing}"
             return noun
@@ -90,8 +101,8 @@ class Detection:
 
 
 # Clothing words used when naming people; kept here to avoid a circular import with the lexicon.
-_CLOTHING_HINT = {
-    "hoodie", "jacket", "coat", "vest", "hi-vis vest", "uniform", "cap", "hat",
+CLOTHING_WORDS = {
+    "hoodie", "jacket", "coat", "vest", "hi-vis vest", "uniform", "cap", "hat", "sweater",
     "helmet", "raincoat", "t-shirt", "shirt", "overalls",
 }
 
@@ -113,7 +124,7 @@ class EventLog:
     message: str  # e.g. "Blue Ford F150 spotted at garage, 12:00."
     entity_id: Optional[str] = None
     zone: Optional[str] = None
-    kind: str = "sighting"  # sighting | visit | status
+    kind: str = "sighting"  # sighting | visit
 
 
 @dataclass
@@ -123,6 +134,8 @@ class Alert:
     rule_id: str
     severity: Severity
     message: str  # e.g. "Person loitering at main gate, 00:01."
+    explanation: str = ""  # why the rule fired, condition by condition, in plain English
+    evidence_frame_ids: list[int] = field(default_factory=list)
     zone: Optional[str] = None
     entity_id: Optional[str] = None
     recommended_action: str = ""

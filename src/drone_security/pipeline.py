@@ -1,23 +1,25 @@
 """The per-frame processing pipeline.
 
-    frame (caption + telemetry)
-      -> analyzer      : caption -> structured detections
-      -> tracker       : detections -> persistent entities, visits, dwell time
+    raw records
+      -> sanitizer     : validate, drop duplicates, re-order (ingest.py)
+      -> analyzer      : caption -> structured detections (perception/)
+      -> tracker       : detections -> re-identified entities, visits, dwell time
       -> event logger  : human-readable logs for notable changes
-      -> rule engine   : alerts (with cooldown + correlation)
-      -> frame index   : SQLite/FTS5, queryable by time / object / text
-      -> context       : rolling working memory for the analyst agent
+      -> rule engine   : alerts from config/rules.yaml (cooldown + correlation)
+      -> frame index   : SQLite + FTS5, queryable by time / object / zone / entity / text
+      -> memory        : hierarchical summaries (minute -> hour -> day) for the agent
 """
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Callable, Iterable, Optional
 
 from .config import PropertyConfig
-from .context import ContextManager
 from .indexing import FrameIndex
+from .ingest import FeedSanitizer, IngestStats
+from .memory import HierarchicalMemory
 from .models import Detection, EventLog, Frame, FrameResult
 from .perception import RuleBasedAnalyzer
 from .rules import RuleContext, RuleEngine
@@ -30,9 +32,12 @@ class RunStats:
     detections: int = 0
     logs: int = 0
     alerts: int = 0
+    late_frames: int = 0
+    raw_rule_firings: int = 0  # before cooldown and correlation
     suppressed_alerts: int = 0
     elapsed_s: float = 0.0
     alerts_by_severity: dict[str, int] = field(default_factory=dict)
+    ingest: Optional[IngestStats] = None
 
     @property
     def fps(self) -> float:
@@ -48,33 +53,55 @@ class SecurityPipeline:
         index: Optional[FrameIndex] = None,
         tracker: Optional[EntityTracker] = None,
         rules: Optional[RuleEngine] = None,
-        context: Optional[ContextManager] = None,
+        memory: Optional[HierarchicalMemory] = None,
     ):
+        tracking = config.tracking
         self.config = config
         self.analyzer = analyzer or RuleBasedAnalyzer()
         self.index = index or FrameIndex()
-        self.tracker = tracker or EntityTracker(timedelta(minutes=config.thresholds.visit_gap_minutes))
+        self.tracker = tracker or EntityTracker(
+            visit_gap=timedelta(minutes=tracking.visit_gap_minutes),
+            max_open_gap=timedelta(hours=tracking.max_open_visit_hours),
+            reid_horizon=timedelta(days=tracking.reid_horizon_days),
+        )
         self.rules = rules or RuleEngine(config)
-        self.context = context or ContextManager(config, self.tracker, index=self.index)
+        self.memory = memory or HierarchicalMemory(config, index=self.index)
+        self.watermark: Optional[datetime] = None  # newest timestamp processed so far
+        self.late_frames = 0
+        self._prev_telemetry_frame: Optional[Frame] = None
         self._last_action: dict[str, Optional[str]] = {}
 
     # ------------------------------------------------------------------ per frame
     def process(self, frame: Frame) -> FrameResult:
         detections = self.analyzer.analyze(frame)
-        observations = [(det, self.tracker.observe(det, frame.timestamp)) for det in detections]
+        if self.watermark and frame.timestamp < self.watermark:
+            # Arrived after newer frames were processed: the tracker and dwell timers cannot go
+            # back in time, so the frame is indexed (searchable) but raises no alerts.
+            self.late_frames += 1
+            result = FrameResult(frame, detections, [], [])
+            self.index.add(result, late=True)
+            return result
+
+        observations = [(det, self.tracker.observe(det, frame.timestamp, frame.frame_id)) for det in detections]
         logs = self._log(frame, observations)
-        alerts = self.rules.evaluate(RuleContext(frame, observations, self.config, self.tracker))
+        alerts = self.rules.evaluate(RuleContext(frame, observations, self.config, self._prev_telemetry_frame))
+        if frame.telemetry is not None:
+            self._prev_telemetry_frame = frame
+        self.watermark = frame.timestamp
 
         result = FrameResult(frame, detections, logs, alerts)
         self.index.add(result)
-        self.index.upsert_entities({id(u.entity): u.entity for _, u in observations}.values())
-        self.context.observe(result)
+        self.index.upsert_entities({u.entity.entity_id: u.entity for _, u in observations}.values())
+        self.memory.observe(result)
         return result
 
-    def run(self, frames: Iterable[Frame], on_result: Optional[Callable[[FrameResult], None]] = None) -> RunStats:
+    def run(self, records: Iterable, on_result: Optional[Callable[[FrameResult], None]] = None,
+            reorder_window: int = 8) -> RunStats:
+        """Process raw records (dicts) or Frames end to end, through the sanitizer."""
         stats = RunStats()
+        sanitizer = FeedSanitizer(self.config, reorder_window=reorder_window)
         started = time.perf_counter()
-        for frame in frames:
+        for frame in sanitizer.process(records):
             result = self.process(frame)
             stats.frames += 1
             stats.detections += len(result.detections)
@@ -84,10 +111,13 @@ class SecurityPipeline:
                 stats.alerts_by_severity[alert.severity.name] = stats.alerts_by_severity.get(alert.severity.name, 0) + 1
             if on_result:
                 on_result(result)
-        self.context.close()
+        self.memory.close()
         self.index.flush()
         stats.elapsed_s = time.perf_counter() - started
+        stats.late_frames = self.late_frames
+        stats.raw_rule_firings = self.rules.raised_before_noise_control
         stats.suppressed_alerts = self.rules.suppressed
+        stats.ingest = sanitizer.stats
         return stats
 
     # ------------------------------------------------------------------ event logs
