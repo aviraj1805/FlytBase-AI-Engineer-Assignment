@@ -195,7 +195,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tele .bar { height: 5px; border-radius: 3px; background: var(--panel-2); margin-top: 5px; overflow: hidden; }
 .tele .bar > i { display: block; height: 100%; background: var(--ok); transition: width .2s; }
 .map-card { padding: 0; overflow: hidden; position: relative; }
-.map-card svg { display: block; width: 100%; height: 560px; background: var(--map-bg); }
+.map-card svg { display: block; width: 100%; height: 500px; background: var(--map-bg); }
 .map-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); padding: 8px 12px 0; }
 .map-note { font-size: 11px; color: var(--muted); padding: 2px 12px 10px; }
 .zone-label { font-size: 6.2px; fill: var(--muted); font-weight: 600; }

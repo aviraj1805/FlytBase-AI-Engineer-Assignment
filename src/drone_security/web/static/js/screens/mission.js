@@ -101,7 +101,7 @@ function update() {
   const counts = {};
   replay.alerts.forEach((a) => (counts[a.severity_name] = (counts[a.severity_name] || 0) + 1));
   $("mc-counters").innerHTML = replay.started
-    ? `<span class="chip">${replay.position + 1} frames processed</span><span class="chip">${replay.alerts.length} alerts</span>
+    ? `<span class="chip">${replay.position + 1} frame${replay.position ? "s" : ""} processed</span><span class="chip">${replay.alerts.length} alert${replay.alerts.length === 1 ? "" : "s"}</span>
        <span class="chip" title="Rule firings before cooldown and correlation">${replay.rawFirings} raw rule firings</span>`
     : "";
   renderTelemetry($("tele"), cur);

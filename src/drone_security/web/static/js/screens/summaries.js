@@ -34,10 +34,10 @@ export async function render(view) {
             const mins = minutes.filter((m) => m.period_start >= h.period_start && m.period_start < h.period_end);
             const quiet = !h.frame_ids.length;
             return `<details class="node"><summary><b class="mono">${hhmm(h.period_start)}–${hhmm(h.period_end) === "00:00" ? "24:00" : hhmm(h.period_end)}</b>
-              <span class="${quiet ? "muted" : ""} small">${quiet ? "quiet hour" : esc(h.text.split(":").slice(1).join(":").slice(0, 120)) + "…"}</span></summary>
+              <span class="${quiet ? "muted" : ""} small">${quiet ? "quiet hour" : esc(h.text.replace(/^\d\d:\d\d-\d\d:\d\d\s*/, "").slice(0, 120)) + "…"}</span></summary>
               <div class="body">${linkCitations(h.text)}</div>
               ${mins.map((m) => `<details class="node" data-start="${esc(m.period_start)}" data-end="${esc(m.period_end)}"><summary><span class="mono small">${hhmm(m.period_start)}–${hhmm(m.period_end)}</span>
-                <span class="small ${m.frame_ids.length ? "" : "muted"}">${esc(m.text.replace(/^[^:]*:\s*/, "").slice(0, 110))}</span></summary>
+                <span class="small ${m.frame_ids.length ? "" : "muted"}">${esc(m.text.replace(/^\d\d:\d\d-\d\d:\d\d\s*/, "").slice(0, 110))}</span></summary>
                 <div class="body">${linkCitations(m.text)}</div><div class="frames small muted">Expand to load the raw frames…</div></details>`).join("")}
             </details>`;
           }).join("")}

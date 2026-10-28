@@ -163,3 +163,22 @@ def test_helpers_humanize_test_names_and_hide_sqlite_internals():
     assert _humanize("test_truck_logged_correctly") == "truck logged correctly"
     assert _humanize("test_x_y[seed-1]") == "x y [seed-1]"
     assert _clean_sql(["BEGIN", "-- SELECT pgno FROM x", "SELECT  1\n FROM t"]) == ["SELECT 1 FROM t"]
+
+
+def test_badge_shows_the_gemini_model_or_why_it_fell_back(tmp_path, monkeypatch):
+    import drone_security.gemini as gemini
+
+    class FakeClient:
+        model = "gemini-test-flash"
+
+    monkeypatch.setattr(gemini, "GeminiClient", lambda *a, **k: FakeClient())
+    state = AppState(db_path=tmp_path / "a.db", use_llm=True)
+    assert state.gemini_status() == {"mode": "gemini", "model": "gemini-test-flash", "reason": None}
+
+    def broken(*a, **k):
+        raise RuntimeError("bad key")
+
+    monkeypatch.setattr(gemini, "GeminiClient", broken)
+    state = AppState(db_path=tmp_path / "b.db", use_llm=True)
+    status = state.gemini_status()
+    assert status["mode"] == "offline" and "RuntimeError" in status["reason"] and not state.use_llm
