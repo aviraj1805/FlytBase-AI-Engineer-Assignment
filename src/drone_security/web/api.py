@@ -373,6 +373,8 @@ def _clean_sql(statements: list[str]) -> list[str]:
     out = []
     for stmt in statements:
         text = " ".join(stmt.split())
+        if text.startswith("--"):  # SQLite's own reads inside the FTS5 virtual table
+            continue
         if text.upper() in ("BEGIN", "COMMIT", "ROLLBACK") or text.upper().startswith(("PRAGMA", "SAVEPOINT", "RELEASE")):
             continue
         out.append(text)
@@ -384,7 +386,7 @@ GROUP_NAMES = {
     "test_perception": "Perception (frame -> objects)", "test_tracking": "Tracking & re-identification",
     "test_rules": "Alert rules", "test_index": "Frame index (SQLite)", "test_retrieval_memory": "Search & memory",
     "test_agent": "Analyst agent", "test_gemini": "Gemini backends (mocked)", "test_evaluation": "Evaluation code",
-    "test_web_api": "Web API (this UI)",
+    "test_web_api": "Web API (this UI)", "test_brief_examples": "Assignment brief examples",
 }
 
 
@@ -414,8 +416,8 @@ def _run_pytest() -> dict:
         group["tests"].append({"name": case.get("name"), "title": _humanize(case.get("name", "")), "outcome": outcome,
                                "seconds": float(case.get("time", 0)),
                                "message": (failure.get("message") or "")[:500] if failure is not None else None})
-    summary = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
     total = {k: sum(g[k] for g in groups.values()) for k in ("passed", "failed", "skipped")}
+    summary = ", ".join(f"{n} {k}" for k, n in total.items() if n or k == "passed") + f" in {seconds:.1f}s"
     return {"ok": proc.returncode == 0, "summary": summary, "total": total, "seconds": round(seconds, 1),
             "groups": list(groups.values()), "ran_at": time.strftime("%Y-%m-%d %H:%M:%S")}
 
