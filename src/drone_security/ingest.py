@@ -113,7 +113,7 @@ class FeedSanitizer:
         for raw in records:
             self.stats.received += 1
             try:
-                frame = parse_record(raw, self.config)
+                frame = raw if isinstance(raw, Frame) else parse_record(raw, self.config)  # Frames are already parsed
             except MalformedRecord as exc:
                 self.stats.quarantined.append((str(raw)[:120], str(exc)))
                 continue

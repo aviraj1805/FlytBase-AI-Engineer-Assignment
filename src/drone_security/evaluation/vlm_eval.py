@@ -45,7 +45,9 @@ def run_vlm_check(config: PropertyConfig, vision, images_dir: Path = IMAGES_DIR,
     pipeline = SecurityPipeline(config, analyzer=precomputed)
     parser = RuleBasedAnalyzer()
     rows = []
-    for frame_id, item in enumerate(manifest["images"], start=1):
+    # replay in time order: an image stamped 02:14 after one stamped 10:07 would be a late frame (no alerts)
+    timeline = sorted(manifest["images"], key=lambda item: item["time"])
+    for frame_id, item in enumerate(timeline, start=1):
         image = (images_dir / item["file"]).read_bytes()
         started = time.perf_counter()
         caption, detections = vision.describe(image, "image/jpeg", item["zone"])
