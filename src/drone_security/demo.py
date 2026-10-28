@@ -157,7 +157,7 @@ class Demo:
 
     def _recorded_results(self) -> None:
         """Results of the Gemini experiments, read from docs/results (they need an API key to re-run)."""
-        for name, title in (("vlm_check.json", "VLM on real images"), ("qa_context_eval.json", "Context experiment")):
+        for name, title in (("vlm_check.json", "VLM on real images"), ("qa_gemini_subset_eval.json", "Context experiment")):
             path = RESULTS / name
             if not path.exists():
                 continue

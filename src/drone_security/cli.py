@@ -316,7 +316,7 @@ def cmd_eval_qa(args) -> int:
         gemini = GeminiClient()
     questions = Path(args.questions) if args.questions else HELDOUT if args.heldout else QUESTIONS
     result = run_qa_eval(config, gemini=gemini, conditions=args.conditions, pause_s=args.pause, questions_path=questions)
-    name = f"qa_{questions.stem}_eval" if args.questions else "qa_heldout_eval" if args.heldout else "qa_context_eval"
+    name = f"{questions.stem}_eval" if args.questions else "qa_heldout_eval" if args.heldout else "qa_context_eval"
     path = write_qa_report(result, RESULTS, name=name)
     table("Answers", ["condition", "accuracy", "abstention", "mean prompt tokens", "mean latency s", "made-up citations"],
           [[c, r["accuracy"], r["abstention_accuracy"], r["mean_prompt_tokens"], r["mean_latency_s"],

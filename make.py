@@ -58,13 +58,14 @@ def evaluate_offline() -> None:
 
 
 def evaluate_gemini() -> None:
+    """Sized for a free-tier key (20 requests per model per day): about 35 requests in total. With a paid key,
+    `python -m drone_security eval-qa --gemini [--heldout]` also runs all questions and both ablations."""
     app("models")
     app("vlm")
     app("eval-retrieval", "--gemini")
-    app("eval", "--seeds", "3", "--analyzer", "gemini")
     app("eval-paraphrase", "--make", "--gemini")
-    app("eval-qa", "--gemini", "--pause", "1")
-    app("eval-qa", "--gemini", "--heldout", "--pause", "1")
+    app("eval-qa", "--gemini", "--questions", "data/eval/qa_gemini_subset.yaml",
+        "--conditions", "offline", "naive", "hierarchical", "--pause", "1")
 
 
 REPORT_CSS = """
