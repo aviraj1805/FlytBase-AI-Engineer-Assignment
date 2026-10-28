@@ -340,35 +340,39 @@ daily-quota fail-fast, per-text embeddings, normalisation, batching, fallbacks) 
 http://localhost:8000. It works offline and needs no npm or build step; a badge shows "Offline mode" or
 "Gemini: *model name*". It is a thin layer: FastAPI routes (`src/drone_security/web/`) call the existing
 modules, and a plain HTML/JS frontend draws the results. Every number comes from the processed index, a live
-pipeline, or the saved outputs in `docs/results`. Eleven screens cover the brief:
+pipeline, or the saved outputs in `docs/results`. Five sections cover the brief. Each opens on the
+essentials, with the detail one click away (sub-tabs, expandable alerts, "Show the SQL", "How I found this"),
+and a "What am I looking at?" panel names the requirement each view covers:
 
-* **Mission Control** replays the day over Server-Sent Events. Each connection runs its own `SecurityPipeline`,
-  so alerts are raised live by the rule engine. Seeking re-processes the earlier frames, because the tracker
-  and cooldowns depend on history. The screen shows telemetry, a property map (zones, the drone's GPS
-  fix, objects at their detected zone) and a scrubber with alert markers.
-* **Live Alerts** shows severity, rule, zone, the explanation, the action and evidence frames, with filters and
-  acknowledgement. **Event Log** has the brief-style log lines with confidence.
-* **Frame Index Explorer** runs structured and full-text queries and shows the SQL SQLite actually executed
-  (captured with `sqlite3.set_trace_callback`), with presets for "show all truck events" and "main gate,
-  00:00-01:00".
-* **Agent Chat** shows the tool calls, clickable [fN] citations and the citation check. **Entity Tracker**
-  shows visits, match confidence and the identity traits that matched. **Summaries** shows the one-sentence
-  summary, the briefing and the day → hour → 10-minute → frame tree. **Context Manager** shows the
-  hierarchical prompt against the naive one.
-* **QA / Tests** runs pytest from the browser. **Evaluation** charts the saved results and can run a small
-  benchmark live. **Architecture** shows the diagrams. A **Demo mode** walks through all of it.
+* **Live** replays the day over Server-Sent Events. Each connection runs its own `SecurityPipeline`, so alerts
+  are raised live by the rule engine. Seeking re-processes the earlier frames, because the tracker and
+  cooldowns depend on history. The view shows a property map (zones, the drone's GPS fix, objects at their
+  detected zone, the zone the camera is looking at), a telemetry strip, a player with alert ticks on the
+  timeline, the current frame and a live alert / activity feed. Its **Alerts** tab lists every alert with
+  severity, rule and zone; opening one shows the explanation, the action and the evidence frames.
+* **Search** runs structured and full-text queries on the frame index and shows the SQL SQLite actually
+  executed (captured with `sqlite3.set_trace_callback`), with examples for "show all truck events" and "main
+  gate, 00:00-01:00". Its **Event log** tab has the brief-style log lines with confidence.
+* **Ask AI** is the agent chat: clickable [fN] citations, the citation check, and the tool calls under "How I
+  found this".
+* **Insights** has the one-sentence summary, the briefing and a 24-hour grid that drills down to ten-minute
+  windows and raw frames (**Briefing**), visits, match confidence and matched traits per entity
+  (**Identities**), and the hierarchical prompt against the naive one (**Memory**).
+* **Proof** charts the saved results one at a time and can run a small benchmark live (**Results**), runs
+  pytest from the browser (**Tests**), and shows the pipeline and diagrams (**Architecture**). A guided
+  **Demo** walks through all of it.
 
-The API has its own tests (`tests/test_web_api.py`). `python make.py ui-check` opens every screen in headless
+The API has its own tests (`tests/test_web_api.py`). `python make.py ui-check` opens every view in headless
 Chromium, fails on console errors, runs the main flows and saves `docs/screenshots/`. Wiring the chat exposed
 one backend inaccuracy: the offline analyst answered the brief's "Did the same truck enter twice?" with a list
 of truck sightings and lost the follow-up subject. It now checks every tracked identity of that kind for
 repeat visits. A test covers the fix, and the dev and held-out Q&A scores did not change.
 
-![Mission Control during the 02:14 intrusion](screenshots/01_mission_control.png)
+![Live view during the 02:14 intrusion](screenshots/01_live_mission.png)
 
-![Frame Index Explorer: "show all truck events" with the SQL that ran](screenshots/04_frame_index_trucks.png)
+![Search: "show all truck events" with the SQL that ran](screenshots/04_search_trucks.png)
 
-**Demo videos.** Recorded from the web UI (Demo mode) or from `python make.py demo`, following
+**Demo videos.** Recorded from the web UI (Demo) or from `python make.py demo`, following
 `docs/DEMO_SCRIPT.md` (8 terminal scenes: feed, real-time alerts, rest of day, index queries, agent Q&A,
 summaries, ground-truth scores, scalability; and the UI walkthrough). The video links are listed in
 `SUBMISSION_CHECKLIST.md` once uploaded.

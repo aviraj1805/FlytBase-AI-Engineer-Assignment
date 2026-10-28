@@ -15,20 +15,22 @@ logic. Start with `make ui` / `python make.py ui` / `python run_ui.py`, then ope
 
 ## Backend functions the UI calls
 
-| Screen | Backend |
+The views are grouped into five sections (Live, Search, Ask AI, Insights, Proof); see the README.
+
+| View | Backend |
 |---|---|
-| Mission Control (replay) | `ingest.read_records`, `ingest.FeedSanitizer`, `pipeline.SecurityPipeline.process` (per frame, live), `config.PropertyConfig` (zones, lat/lon) |
-| Live Alerts | alerts from the live replay (`FrameResult.alerts`); full day from `FrameIndex.alerts` |
-| Event Log | `FrameIndex.events` joined with `detections` (confidence, re-ID confidence) |
+| Live › Mission (replay) | `ingest.read_records`, `ingest.FeedSanitizer`, `pipeline.SecurityPipeline.process` (per frame, live), `config.PropertyConfig` (zones, lat/lon) |
+| Live › Alerts | alerts from the live replay (`FrameResult.alerts`); full day from `FrameIndex.alerts` |
+| Search › Event log | `FrameIndex.events` joined with `detections` (confidence, re-ID confidence) |
 | Frame detail | `FrameIndex.query_frames(frame_ids=…)`, `query_detections`, `alerts`, `events` |
-| Frame Index Explorer | `FrameIndex.query_detections`, `query_frames`, `retrieval.HybridRetriever.search`; the SQL shown is captured with `sqlite3.set_trace_callback` while the query runs |
-| Agent Chat | `agent.SecurityAnalyst.ask` (Gemini agent when a key is set, else offline), `agent.check_citations` |
-| Entity Tracker | `FrameIndex.entities`, `query_detections(entity_id=…)`, `alerts(entity_id=…)`, tracker weights from `tracking.py` |
-| Summaries | `analysis.summarize_video`, `daily_briefing`, `recommend`, `FrameIndex.summaries(level)` |
-| Context view | `memory.render_from_index`, `render_naive`, `estimate_tokens`; saved `docs/results/qa_*_eval.json` |
-| QA / Tests | `pytest --junitxml` in a subprocess, parsed per test file |
-| Evaluation | saved `docs/results/*.json`; `evaluation.benchmark.run_benchmark` with a small size |
-| Architecture | `docs/diagrams/*.svg` |
+| Search › Frame index | `FrameIndex.query_detections`, `query_frames`, `retrieval.HybridRetriever.search`; the SQL shown is captured with `sqlite3.set_trace_callback` while the query runs |
+| Ask AI | `agent.SecurityAnalyst.ask` (Gemini agent when a key is set, else offline), `agent.check_citations` |
+| Insights › Identities | `FrameIndex.entities`, `query_detections(entity_id=…)`, `alerts(entity_id=…)`, tracker weights from `tracking.py` |
+| Insights › Briefing | `analysis.summarize_video`, `daily_briefing`, `recommend`, `FrameIndex.summaries(level)` |
+| Insights › Memory | `memory.render_from_index`, `render_naive`, `estimate_tokens`; saved `docs/results/qa_*_eval.json` |
+| Proof › Tests | `pytest --junitxml` in a subprocess, parsed per test file |
+| Proof › Results | saved `docs/results/*.json`; `evaluation.benchmark.run_benchmark` with a small size |
+| Proof › Architecture | `docs/diagrams/*.svg` |
 
 ## Data shapes (all JSON)
 

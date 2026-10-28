@@ -39,12 +39,15 @@ deterministic and free, and the live Gemini behaviour is measured separately by 
 
 ## Web UI checks
 
-`python make.py ui-check` (`scripts/ui_check.py`) starts the UI server, opens each of the 11 screens and demo
-mode in headless Chromium (Playwright), fails on any console error or missing element, and runs the main
-flows: the replay raises the 00:01 alert live, the critical marker jumps to 02:14, an alert is acknowledged,
-the truck and main-gate presets return frames and show their SQL, the frame drawer opens, the agent answers
-two questions with clickable citations, the test suite runs from the UI and passes. Screenshots go to
-`docs/screenshots/`. Latest run: 14/14 checks passed.
+`python make.py ui-check` (`scripts/ui_check.py`) starts the UI server, opens every view in headless Chromium
+(Playwright), fails on any console error or missing element, and runs the main flows: an old `#/mission` link
+redirects to `#/live`, the replay raises the 00:01 alert live, the critical tick jumps to 02:14, an alert opens
+with its evidence and is acknowledged, the event log filters to the F150, the truck and main-gate searches
+return frames and show their SQL, the frame drawer opens, the agent answers two questions with clickable
+citations and tool calls, an identity shows its matched traits, the briefing loads a ten-minute window's raw
+frames, the memory view renders, the test suite runs from the UI and passes, the results tabs switch charts,
+the diagrams load, the demo tour advances with the arrow key, and the light theme renders. Screenshots go to
+`docs/screenshots/`. Latest run: 15/15 checks passed.
 
 ## Scenarios
 

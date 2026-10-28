@@ -30,7 +30,6 @@ export async function readSSE(res, onEvent) {
 
 export const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const hhmm = (ts) => (ts ? ts.slice(11, 16) : "");
-export const pct = (v, d = 0) => (v == null ? "–" : `${(v * 100).toFixed(d)}%`);
 export const fixed = (v, d = 1) => (v == null ? "–" : Number(v).toFixed(d));
 export const zoneName = (id) => (id ? id.replace(/_/g, " ") : "–");
 export const SEVERITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
@@ -46,12 +45,32 @@ export const loading = (label = "Loading…") => `<div class="state"><span class
 export const empty = (label) => `<div class="state">${esc(label)}</div>`;
 export const failure = (err, what = "Request failed") => `<div class="state error"><b>${esc(what)}.</b> ${esc(err && err.message ? err.message : err)}</div>`;
 
-// Page header with a help tooltip saying what the screen shows and which requirement it covers.
-export function pageHead(title, help, extra = "") {
-  return `<div class="page-head"><h1>${esc(title)}</h1>
-    <span class="help" tabindex="0" aria-label="About this screen">?<span class="tip">${help}</span></span>
-    <span class="spacer"></span>${extra}</div>`;
+// First line of a view: what it shows in plain words, with optional actions on the right.
+export const lead = (text, extra = "") => `<div class="lead"><p>${text}</p>${extra ? `<div class="lead-actions">${extra}</div>` : ""}</div>`;
+
+// A number that counts up when it appears; it is rendered with its final value, so it is right without JS animation.
+export function num(value, dec = 0, suffix = "") {
+  if (value == null) return "–";
+  return `<span data-count="${Number(value)}" data-dec="${dec}" data-suffix="${esc(suffix)}">${formatNum(value, dec)}${esc(suffix)}</span>`;
 }
+const formatNum = (v, dec) => Number(v).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+export function countUp(root) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  root.querySelectorAll("[data-count]").forEach((el) => {
+    const target = Number(el.dataset.count), dec = Number(el.dataset.dec), suffix = el.dataset.suffix;
+    const t0 = performance.now();
+    const tick = (t) => {
+      const k = Math.min(1, (t - t0) / 700);
+      el.textContent = formatNum(target * (1 - (1 - k) ** 3), dec) + suffix;
+      if (k < 1 && el.isConnected) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+// Small confidence meter: bar plus the value; amber below 0.7.
+export const meter = (v) => (v == null ? "–" : `<span class="meter ${v < 0.7 ? "low" : ""}" style="--v:${Math.round(v * 100)}%"><i></i>${fixed(v, 2)}</span>`);
 
 export function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -70,7 +89,8 @@ export function chart(canvas, config) {
   Chart.defaults.color = cssVar("--muted");
   Chart.defaults.borderColor = cssVar("--border");
   Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-  const c = new Chart(canvas, { ...config, options: { responsive: true, maintainAspectRatio: false, animation: false, ...(config.options || {}) } });
+  Chart.defaults.datasets.bar.maxBarThickness = 72;
+  const c = new Chart(canvas, { ...config, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 500 }, ...(config.options || {}) } });
   charts.push(c);
   return c;
 }

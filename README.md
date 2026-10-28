@@ -39,24 +39,32 @@ make ui                     # or: python make.py ui   (or, after setup: python r
 That one command creates the virtual environment if it is missing, processes the scenario day into
 `data/runs/ui.db`, and opens **http://localhost:8000**. There is no npm and no build step, and it works fully
 offline. Options: `python make.py ui --port 8001 --no-browser`. The top-right badge shows **Offline mode**,
-or **Gemini: *model name*** when `GEMINI_API_KEY` is set (environment or `.env`). With a key, the agent chat
-and the "Rewrite briefing with Gemini" button use Gemini; alerts stay deterministic. Press **Demo mode**
-(or `D`) for a numbered walkthrough that drives every screen in the order of
+or **Gemini · *model name*** when `GEMINI_API_KEY` is set (environment or `.env`). With a key, the agent
+and the "Rewrite the briefing with Gemini" button use Gemini; alerts stay deterministic. Press **Demo**
+(or `D`) for a numbered walkthrough that drives every view in the order of
 [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
 
-| Screen (key) | What it shows | Assignment requirement |
+The console has five sections (keys `1`–`5`). Each opens on its main view, with the detail one click
+away: sub-tabs, expandable alerts, "Show the SQL", "How I found this". **What am I looking at?** (top right)
+explains each view and names the requirement it covers.
+
+| Section › view | What it shows | Assignment requirement |
 |---|---|---|
-| Mission Control (1) | Live replay: play/pause/speed, scrubber with alert markers, telemetry, property map (zones, drone GPS, objects), current frame + detections | Process telemetry + frames; real-time alerts |
-| Live Alerts (2) | Alerts as the replay raises them: severity, rule, time, zone, explanation, action, evidence frames; filters; acknowledge | Real-time alerts from predefined rules |
-| Event Log (3) | Searchable, sortable log ("Blue Ford F150 spotted at garage, 09:16.") with confidence; click a row to open the frame | Identify and log objects/events |
-| Frame Index (4) | Queries by time, object, zone, entity, free text (FTS5 + vectors); hourly histogram; **the SQL SQLite actually ran**; presets | Frame-by-frame indexing |
-| Agent Chat (5) | Streamed answers, tool calls, clickable [fN] citations, citation check, "not enough evidence" | Bonus: Q&A agent |
-| Entity Tracker (6) | Each re-identified entity: visits on a 24 h bar, match confidence, which traits matched (with weights), every sighting | Tracking / re-identification |
-| Summaries (7) | One-sentence summary, daily briefing, recommendations, day → hour → 10-minute → frames tree | Bonus: video summarisation |
-| Context Manager (8) | What the agent's prompt holds (sections + tokens, adjustable budget) vs pasting every frame; recorded experiments | Context management for long footage |
-| QA / Tests (9) | Runs the pytest suite on the server; pass/fail per group with test names | Testing |
-| Evaluation (0) | Charts from `docs/results/*.json` (P/R/F1 vs ground truth, reworded captions, re-ID ablation, noise control, retrieval, benchmark) + "Run benchmark" | Evaluation, scalability |
-| Architecture | The diagrams in `docs/diagrams` with a component table | Design |
+| **Live** › Mission | Replay of the day through the real pipeline: property map (zones, drone at its GPS fix, objects, the zone the camera is looking at), telemetry strip, player with alert ticks on the timeline, the current frame, live Alerts / Activity log feed | Process telemetry + frames; real-time alerts |
+| **Live** › Alerts | Alerts newest first; click one for the reason, recommended action and evidence frames; severity filter with counts; rule / zone filters; acknowledge | Real-time alerts from predefined rules |
+| **Search** › Frame index | One search bar (FTS5 + vectors) plus object / zone / entity / time filters shown as removable pills; example chips; hits per hour; **the SQL SQLite actually ran** | Frame-by-frame indexing |
+| **Search** › Event log | The logged events ("Blue Ford F150 spotted at garage, 09:16.") with perception and re-ID confidence; filter, sort, click a row to open the frame | Identify and log objects/events |
+| **Ask AI** | Chat with the analyst agent: clickable [fN] citations, a citation check on every answer, tool calls under "How I found this", "not enough evidence" | Bonus: Q&A agent |
+| **Insights** › Briefing | One-sentence summary, daily briefing, recommendations, a 24-hour activity grid that drills down to ten-minute windows and raw frames | Bonus: video summarisation |
+| **Insights** › Identities | Each re-identified entity: visits on a 24 h bar, match confidence, which traits matched (with weights), every sighting | Tracking / re-identification |
+| **Insights** › Memory | The agent's prompt (sections and tokens, adjustable budget) against pasting every frame; recorded Q&A accuracy for both | Context management for long footage |
+| **Proof** › Results | Headline scores, then one chart at a time from `docs/results/*.json` (P/R/F1 vs ground truth, reworded captions, re-ID robustness, noise control, retrieval, real photos, scale) + "Run benchmark" | Evaluation, scalability |
+| **Proof** › Tests | Runs the pytest suite on the server; pass ring and pass/fail per group with test names | Testing |
+| **Proof** › Architecture | The pipeline as clickable components, the diagrams in `docs/diagrams`, how the UI is wired | Design |
+
+Clicking any frame reference (`f67`) opens the frame drawer: caption, detections with confidence, alerts it
+raised or supports, telemetry, and "Show in replay". Links from the earlier one-page-per-screen layout
+(`#/mission`, `#/chat`, ...) redirect to the matching view.
 
 Every number on screen comes from the backend: the processed day, a live pipeline (the replay), or the saved
 experiment outputs in `docs/results`. Nothing is mocked.
@@ -83,18 +91,19 @@ the existing modules: pipeline, index, tracker, rules, retrieval, memory, agent,
 * **Honest limits:** the agent computes its answer first, then the server streams it in chunks (display
   streaming, not model token streaming). Objects are drawn at their detected zone, because captions give a
   zone, not coordinates.
-* **Checks:** `tests/test_web_api.py` covers every endpoint; `python make.py ui-check` opens every screen in
+* **Checks:** `tests/test_web_api.py` covers every endpoint; `python make.py ui-check` opens every view in
   headless Chromium, fails on console errors, runs the main flows (replay raises an alert, a query returns
-  frames, the agent answers with citations, the test suite runs) and saves the screenshots below.
+  frames, the agent answers with citations, the test suite runs, the demo tour advances, both themes) and
+  saves the screenshots below.
 
 ### Screenshots
 
 | | |
 |---|---|
-| ![Mission Control](docs/screenshots/01_mission_control.png) Mission Control: the 02:14 intrusion | ![Live alerts](docs/screenshots/02_live_alerts.png) Live alerts with explanation and evidence |
-| ![Frame index](docs/screenshots/04_frame_index_trucks.png) "Show all truck events" with the SQL that ran | ![Agent chat](docs/screenshots/07_agent_chat.png) Agent chat with tool calls and checked citations |
-| ![Entity tracker](docs/screenshots/08_entity_tracker.png) Entity tracker: why the F150 was matched | ![Context](docs/screenshots/10_context_manager.png) Context manager vs the naive prompt |
-| ![Summaries](docs/screenshots/09_summaries.png) Hierarchical summaries | ![Evaluation](docs/screenshots/12_evaluation.png) Evaluation from saved results |
+| ![Live](docs/screenshots/01_live_mission.png) Live: the 02:14 intrusion on the map | ![Alerts](docs/screenshots/02_live_alerts.png) Alerts with the reason, action and evidence |
+| ![Search](docs/screenshots/04_search_trucks.png) "Show all truck events" with the SQL that ran | ![Ask AI](docs/screenshots/07_ask_ai.png) Ask AI: checked citations and the tool calls behind them |
+| ![Identities](docs/screenshots/08_identities.png) Identities: why the F150 was matched | ![Memory](docs/screenshots/10_memory.png) Memory: the agent's prompt vs pasting every frame |
+| ![Briefing](docs/screenshots/09_briefing.png) Briefing: one sentence, daily briefing, recommendations | ![Results](docs/screenshots/12_results.png) Results from the saved runs |
 
 All screenshots: [docs/screenshots](docs/screenshots).
 
@@ -196,7 +205,7 @@ config/              property.json (zones, hours, known vehicles), rules.yaml
 data/                scenario script + generated day, real images (+ licences), eval sets
 tests/               154 tests (incl. web API and the brief's own examples)
 run_ui.py            starts the web UI (src/drone_security/web/)
-scripts/ui_check.py  headless browser check of every screen -> docs/screenshots
+scripts/ui_check.py  headless browser check of every view -> docs/screenshots
 ```
 
 Key design decisions (details and alternatives in the report, section 4):
@@ -213,9 +222,10 @@ Key design decisions (details and alternatives in the report, section 4):
 This project was built with **Claude Code** (Anthropic) working from the assignment text: it audited the first
 version, planned the upgrade, wrote the code, tests, experiments and documents, ran every command, and fixed
 what the measurements exposed. Claude Code also generated the whole web UI (FastAPI layer, frontend, API
-tests, the headless screen check and the screenshots). While wiring the chat it found that the offline
+tests, the headless UI check and the screenshots), and later redesigned it from eleven dense screens into five
+sections that show the essentials first and the detail on demand. While wiring the chat it found that the offline
 analyst answered "Did the same truck enter twice?" with a list of sightings; it fixed that with a test. What I
-still need to review in the UI: that each help tooltip states the requirement correctly, the map layout of
+still need to review in the UI: that each "What am I looking at?" panel states the requirement correctly, the map layout of
 the zones, the wording of the demo-mode talking points, and that I can explain the replay design (re-running
 the pipeline on seek) and the SSE endpoints in an interview. **Gemini** is part of the product (perception, Q&A, embeddings). What I
 reviewed and own, especially the ground-truth design, thresholds, and the honesty of the reported numbers, is
