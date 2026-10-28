@@ -66,7 +66,10 @@ def run_qa_eval(config: PropertyConfig, *, gemini=None, conditions: Optional[lis
     sizes = {name: {"chars": len(text), "estimated_tokens": estimate_tokens(text)} for name, text in contexts.items()}
     if gemini is not None:
         for name in ("naive", "hierarchical", "tools_only"):
-            sizes[name]["gemini_tokens"] = gemini.count_tokens(contexts[name])
+            try:
+                sizes[name]["gemini_tokens"] = gemini.count_tokens(contexts[name])
+            except Exception:  # token counting is a nice-to-have; never lose a run over it
+                sizes[name]["gemini_tokens"] = None
 
     wanted = conditions or (["offline", "naive", "hierarchical", "tools_only", "summaries"] if gemini else ["offline"])
     results = {}

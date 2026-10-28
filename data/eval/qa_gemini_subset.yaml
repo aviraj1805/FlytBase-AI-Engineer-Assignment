@@ -1,0 +1,32 @@
+# Six questions for the Gemini context experiment, chosen before running it.
+#
+# The Gemini key used for this project is on the free tier (20 requests per model per day), which rules out
+# the full 32 questions x 4 conditions. This subset keeps what the experiment is about: questions that need
+# the whole day at once (Q01, Q11), three held-out questions the offline router got wrong (H05, H07, H12),
+# and one question that must be refused (Q18). Copied unchanged from qa_questions.yaml and qa_heldout.yaml.
+
+questions:
+  - id: Q01
+    q: "How many times did the blue Ford F150 enter the property today?"
+    any: ["\\b2\\b", "\\btwo\\b", "twice"]
+    scope: whole day
+  - id: Q11
+    q: "What animals were seen today?"
+    all: ["fox", "deer", "dog"]
+    scope: whole day
+  - id: H05
+    q: "Was any vehicle parked at the warehouse in the late morning?"
+    any: ["silverado"]
+    scope: window
+  - id: H07
+    q: "Did the gardener trigger any alerts?"
+    any: ["\\bno\\b", "\\bnone\\b", "no alerts", "did not", "didn't"]
+    scope: identity
+  - id: H12
+    q: "What happened in the hour after the main gate was left open?"
+    all: ["SUV"]
+    scope: window
+  - id: Q18
+    q: "What was the licence plate of the black SUV?"
+    abstain: true
+    scope: unanswerable

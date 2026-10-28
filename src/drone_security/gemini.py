@@ -29,6 +29,8 @@ ENV_FILE = PROJECT_ROOT / ".env"
 _EXCLUDE = ("tts", "image", "live", "audio", "embedding", "native", "exp", "computer", "robotics", "latest", "learnlm",
             "gemma", "aqa", "veo", "imagen", "lyria", "thinking", "lite")
 _RETRYABLE = {429, 500, 502, 503, 504}
+REQUEST_TIMEOUT_MS = 120_000
+MAX_RETRY_WAIT_S = 90
 
 
 def load_api_key() -> Optional[str]:
@@ -81,11 +83,13 @@ class GeminiClient:
                  max_retries: int = 6):
         if client is None:
             from google import genai
+            from google.genai import types
 
             key = load_api_key()
             if not key:
                 raise RuntimeError("No Gemini API key: set GEMINI_API_KEY or add it to .env")
-            client = genai.Client(api_key=key)
+            # the SDK waits forever by default; a stalled connection must fail (and be retried) instead
+            client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS))
         self.client = client
         self.max_retries = max_retries
         self.usage = Usage()
@@ -99,18 +103,23 @@ class GeminiClient:
     # ------------------------------------------------------------------ generation
     def text(self, prompt: str, *, system: Optional[str] = None, images: Optional[list[tuple[bytes, str]]] = None,
              purpose: str = "text") -> str:
-        response = self._generate(prompt, system=system, images=images, schema=None, purpose=purpose)
+        response = self._generate(prompt, system=system, images=images, schema=None, purpose=purpose, thinking=None)
         return (response.text or "").strip()
 
     def json(self, prompt: str, schema: type[T], *, system: Optional[str] = None,
-             images: Optional[list[tuple[bytes, str]]] = None, purpose: str = "json") -> T:
-        """Structured output validated against a Pydantic model."""
-        response = self._generate(prompt, system=system, images=images, schema=schema, purpose=purpose)
+             images: Optional[list[tuple[bytes, str]]] = None, purpose: str = "json",
+             thinking: Optional[str] = None) -> T:
+        """Structured output validated against a Pydantic model.
+
+        thinking="low" suits bulk extraction (caption -> objects): faster, and stays inside the server deadline.
+        """
+        response = self._generate(prompt, system=system, images=images, schema=schema, purpose=purpose,
+                                  thinking=thinking)
         if response.parsed is not None:
             return response.parsed
         return schema.model_validate(json.loads(response.text))  # some SDK versions only fill .text
 
-    def _generate(self, prompt: str, *, system, images, schema, purpose: str):
+    def _generate(self, prompt: str, *, system, images, schema, purpose: str, thinking: Optional[str]):
         from google.genai import types
 
         parts: list[Any] = [types.Part.from_bytes(data=data, mime_type=mime) for data, mime in (images or [])]
@@ -120,6 +129,7 @@ class GeminiClient:
             temperature=0.0,  # deterministic-as-possible answers for evaluation
             response_mime_type="application/json" if schema else None,
             response_schema=schema,
+            thinking_config=types.ThinkingConfig(thinking_level=thinking) if thinking else None,
         )
         started = time.perf_counter()
         response = self._retry(lambda: self.client.models.generate_content(model=self.model, contents=parts, config=config))
@@ -138,9 +148,13 @@ class GeminiClient:
         config = types.EmbedContentConfig(task_type=task_type, output_dimensionality=dimensions)
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
+            # one Content per text: multimodal embedding models merge a plain list of strings into ONE vector
+            contents = [types.Content(parts=[types.Part(text=t)]) for t in batch]
             started = time.perf_counter()
-            response = self._retry(lambda: self.client.models.embed_content(model=self.embed_model, contents=batch, config=config))
+            response = self._retry(lambda: self.client.models.embed_content(model=self.embed_model, contents=contents, config=config))
             self.usage.add("embed", 0, 0, time.perf_counter() - started)
+            if len(response.embeddings) != len(batch):
+                raise RuntimeError(f"{self.embed_model} returned {len(response.embeddings)} vectors for {len(batch)} texts")
             vectors += [e.values for e in response.embeddings]
         return vectors
 
@@ -154,11 +168,14 @@ class GeminiClient:
             try:
                 return call()
             except Exception as exc:  # google.genai.errors.APIError carries an HTTP status in .code
-                code = getattr(exc, "code", None)
-                if code not in _RETRYABLE or attempt == self.max_retries - 1:
+                timed_out = "timeout" in type(exc).__name__.lower()
+                if not (timed_out or getattr(exc, "code", None) in _RETRYABLE) or attempt == self.max_retries - 1:
+                    raise
+                wait = _retry_after(exc)
+                if wait and wait > MAX_RETRY_WAIT_S:  # a daily quota, not a burst limit: retrying cannot help
                     raise
                 self.usage.retries += 1
-                time.sleep(_retry_after(exc) or delay)
+                time.sleep(wait or delay)
                 delay = min(delay * 2, 60)
         raise RuntimeError("unreachable")
 

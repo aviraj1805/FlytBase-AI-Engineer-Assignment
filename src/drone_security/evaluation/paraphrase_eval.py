@@ -40,14 +40,17 @@ class Rewrites(BaseModel):
     rewrites: list[Rewrite]
 
 
-def make_paraphrases(client, config: PropertyConfig, seed: int = 7, batch_size: int = 40) -> dict[str, str]:
+def make_paraphrases(client, config: PropertyConfig, seed: int = 7, batch_size: int = 35) -> dict[str, str]:
+    """Reword every distinct caption; captions already reworded in a previous run are kept (resumable)."""
     day = generate_day(load_script(), config, seed=seed)
-    captions = list(dict.fromkeys(r["description"] for r in day.records))
     mapping: dict[str, str] = {}
+    if PARAPHRASES.exists():
+        mapping = json.loads(PARAPHRASES.read_text(encoding="utf-8"))["rewrites"]
+    captions = [c for c in dict.fromkeys(r["description"] for r in day.records) if c not in mapping]
     for i in range(0, len(captions), batch_size):
         batch = captions[i:i + batch_size]
         listing = "\n".join(f"{n}. {c}" for n, c in enumerate(batch))
-        result = client.json(PROMPT.format(captions=listing), Rewrites, purpose="paraphrase")
+        result = client.json(PROMPT.format(captions=listing), Rewrites, purpose="paraphrase", thinking="low")
         for item in result.rewrites:
             if 0 <= item.index < len(batch) and item.text.strip():
                 mapping[batch[item.index]] = item.text.strip()

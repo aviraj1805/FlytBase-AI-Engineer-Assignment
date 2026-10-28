@@ -47,7 +47,7 @@ class LangChainAnalyst:
         if llm is None:
             from langchain_google_genai import ChatGoogleGenerativeAI
 
-            llm = ChatGoogleGenerativeAI(model=model, google_api_key=api_key, temperature=0.0)
+            llm = ChatGoogleGenerativeAI(model=model, google_api_key=api_key, temperature=0.0, timeout=120, max_retries=6)
         self.llm = llm
         prompt = SYSTEM_PROMPT.replace("{not_enough}", NOT_ENOUGH_EVIDENCE).replace("{context}", context_text)
         self.agent = create_agent(model=self.llm, tools=self.tools, system_prompt=prompt)

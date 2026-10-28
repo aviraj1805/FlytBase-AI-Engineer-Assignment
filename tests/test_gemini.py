@@ -131,3 +131,35 @@ def test_model_listing_reads_the_sdk_objects():
         SimpleNamespace(name="models/gemini-2.5-flash", display_name="Flash", supported_actions=["generateContent"],
                         input_token_limit=1048576)]))
     assert gemini.list_models(fake)[0]["name"] == "gemini-2.5-flash"
+
+
+def test_each_text_gets_its_own_embedding():
+    """Multimodal embedding models merge a plain list of strings into one vector; texts must be sent as separate Contents."""
+    calls = []
+
+    def embed_content(model, contents, config):
+        calls.append(contents)
+        merged = isinstance(contents[0], str)  # what gemini-embedding-2 does with a plain list
+        vectors = [[0.0, 1.0]] if merged else [[float(i), 1.0] for i, _ in enumerate(contents)]
+        return SimpleNamespace(embeddings=[SimpleNamespace(values=v) for v in vectors])
+
+    fake = SimpleNamespace(models=SimpleNamespace(embed_content=embed_content))
+    client = gemini.GeminiClient(model="m", embed_model="gemini-embedding-2", client=fake)
+    vectors = client.embed(["blue truck", "fox", "gate open"], dimensions=2)
+    assert len(vectors) == 3 and len(calls) == 1
+
+
+def test_daily_quota_errors_fail_fast_instead_of_sleeping():
+    class DailyQuota(Exception):
+        code = 429
+
+    calls = []
+
+    def exhausted():
+        calls.append(1)
+        raise DailyQuota('{"retryDelay": "4477s"}')
+
+    client = gemini.GeminiClient(model="m", embed_model="e", client=object())
+    with pytest.raises(DailyQuota):
+        client._retry(exhausted)
+    assert len(calls) == 1 and client.usage.retries == 0

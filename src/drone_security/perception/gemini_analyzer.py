@@ -73,7 +73,7 @@ class GeminiFrameAnalyzer:
 
     name = "gemini"
 
-    def __init__(self, config: PropertyConfig, client=None, *, batch_size: int = 40):
+    def __init__(self, config: PropertyConfig, client=None, *, batch_size: int = 35):
         if client is None:
             from ..gemini import GeminiClient
 
@@ -110,7 +110,7 @@ class GeminiFrameAnalyzer:
         try:
             self.stats["llm_requests"] += 1
             self.stats["captions_sent"] += len(items)
-            batch = self.client.json(prompt, CaptionBatch, purpose="frame_analysis")
+            batch = self.client.json(prompt, CaptionBatch, purpose="frame_analysis", thinking="low")
         except Exception as exc:  # quota, network, invalid output: those frames use the parser
             log.warning("Gemini frame analysis failed for %d captions: %s", len(items), exc)
             return

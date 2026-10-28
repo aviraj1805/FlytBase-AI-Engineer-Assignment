@@ -314,9 +314,9 @@ def cmd_eval_qa(args) -> int:
         from .gemini import GeminiClient
 
         gemini = GeminiClient()
-    questions = HELDOUT if args.heldout else QUESTIONS
+    questions = Path(args.questions) if args.questions else HELDOUT if args.heldout else QUESTIONS
     result = run_qa_eval(config, gemini=gemini, conditions=args.conditions, pause_s=args.pause, questions_path=questions)
-    name = "qa_heldout_eval" if args.heldout else "qa_context_eval"
+    name = f"qa_{questions.stem}_eval" if args.questions else "qa_heldout_eval" if args.heldout else "qa_context_eval"
     path = write_qa_report(result, RESULTS, name=name)
     table("Answers", ["condition", "accuracy", "abstention", "mean prompt tokens", "mean latency s", "made-up citations"],
           [[c, r["accuracy"], r["abstention_accuracy"], r["mean_prompt_tokens"], r["mean_latency_s"],
@@ -332,13 +332,15 @@ def cmd_vlm(args) -> int:
 
     config = PropertyConfig.load(args.config)
     client = GeminiClient()
-    result = run_vlm_check(config, GeminiVisionAnalyzer(config, client), client=client)
-    path = write_vlm_report(result, RESULTS)
-    for r in result["rows"]:
+    def show(r: dict) -> None:
         out(f"{r['file']} [{r['zone']} {r['time']}] {r['latency_s']} s", style="bold")
         out(f"  caption: {r['caption']}")
         out(f"  objects: {'; '.join(r['vlm_objects']) or '-'}")
         out(f"  alerts:  {', '.join(r['alerts']) or '-'} (expected {r['expected_alert'] or 'none'})")
+
+    out(f"model: {client.model}")
+    result = run_vlm_check(config, GeminiVisionAnalyzer(config, client), client=client, on_row=show)
+    path = write_vlm_report(result, RESULTS)
     out(json.dumps(result["summary"], indent=1))
     out(f"full results: {path}")
     return 0
@@ -526,6 +528,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("eval-qa", help="context-management experiment on a fixed question set")
     p.add_argument("--gemini", action="store_true", help="run the Gemini conditions (needs GEMINI_API_KEY)")
     p.add_argument("--heldout", action="store_true", help="use the held-out question set")
+    p.add_argument("--questions", help="another question file, e.g. data/eval/qa_gemini_subset.yaml")
     p.add_argument("--conditions", nargs="+", choices=["offline", "naive", "hierarchical", "tools_only", "summaries"])
     p.add_argument("--pause", type=float, default=0.0, help="seconds between questions (free-tier rate limits)")
     p.set_defaults(func=cmd_eval_qa)

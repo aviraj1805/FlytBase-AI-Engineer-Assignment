@@ -1,0 +1,250 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T10:54:09",
+  "command": "python -m drone_security vlm",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "images": 7,
+ "summary": {
+  "vlm": {
+   "object_recall": 1.0,
+   "attribute_accuracy": 1.0,
+   "images_with_false_alarms": 0,
+   "vehicle_count_ok": 7
+  },
+  "parser_on_vlm_caption": {
+   "object_recall": 0.857,
+   "attribute_accuracy": 1.0,
+   "images_with_false_alarms": 0,
+   "vehicle_count_ok": 7
+  },
+  "alert_agreement": 1.0,
+  "mean_latency_s": 14.64,
+  "model": "gemini-3.5-flash",
+  "usage": {
+   "requests": 7,
+   "prompt_tokens": 10852,
+   "output_tokens": 6367,
+   "latency_s": 102.481
+  }
+ },
+ "rows": [
+  {
+   "file": "05_fox_lawn.jpg",
+   "zone": "backyard",
+   "time": "01:30",
+   "caption": "A brown fox is standing on the grass in the backyard.",
+   "latency_s": 4.63,
+   "vlm_objects": [
+    "Brown fox standing"
+   ],
+   "vlm": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [],
+   "expected_alert": null,
+   "alert_ok": true
+  },
+  {
+   "file": "03_fence_climbers.jpg",
+   "zone": "back_fence",
+   "time": "02:14",
+   "caption": "Two men in black jackets are climbing over the back fence, one of them carrying a briefcase.",
+   "latency_s": 7.78,
+   "vlm_objects": [
+    "Person in black jacket climbing",
+    "Person in black jacket climbing"
+   ],
+   "vlm": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 1,
+    "attributes_checked": 1,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 1,
+    "attributes_checked": 1,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [
+    "INTRUSION"
+   ],
+   "expected_alert": "INTRUSION",
+   "alert_ok": true
+  },
+  {
+   "file": "01_blue_f150_traffic.jpg",
+   "zone": "main_gate",
+   "time": "09:14",
+   "caption": "A blue Ford F150 truck, a navy Hyundai Sonata car, a red Dodge Ram truck, a blue garbage truck, a black SUV, and a grey car move along the roadway near the main gate.",
+   "latency_s": 10.44,
+   "vlm_objects": [
+    "Blue Ford F150",
+    "Blue Hyundai Sonata",
+    "Red Dodge Ram",
+    "Blue truck",
+    "Black SUV",
+    "Gray car"
+   ],
+   "vlm": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 2,
+    "attributes_checked": 2,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 2,
+    "attributes_checked": 2,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [],
+   "expected_alert": null,
+   "alert_ok": true
+  },
+  {
+   "file": "02_parcel_doorstep.jpg",
+   "zone": "front_door",
+   "time": "10:07",
+   "caption": "A damaged brown package sits on the step at the front door.",
+   "latency_s": 9.82,
+   "vlm_objects": [
+    "Brown package"
+   ],
+   "vlm": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [],
+   "expected_alert": null,
+   "alert_ok": true
+  },
+  {
+   "file": "06_forklift_loading_dock.jpg",
+   "zone": "warehouse",
+   "time": "12:30",
+   "caption": "A blue Komatsu forklift and a yellow Panus container truck are positioned at the warehouse as two workers wearing green tops load packages into the open container.",
+   "latency_s": 12.59,
+   "vlm_objects": [
+    "Person in green shirt loading",
+    "Person in green shirt loading",
+    "Blue Komatsu loading",
+    "Yellow Panus loading",
+    "Door"
+   ],
+   "vlm": {
+    "expected": 2,
+    "found": 2,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 2,
+    "found": 2,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [],
+   "expected_alert": null,
+   "alert_ok": true
+  },
+  {
+   "file": "07_empty_lane.jpg",
+   "zone": "driveway",
+   "time": "13:00",
+   "caption": "The driveway is empty with no people, vehicles, animals, or open gates present.",
+   "latency_s": 41.39,
+   "vlm_objects": [],
+   "vlm": {
+    "expected": 0,
+    "found": 0,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 0,
+    "found": 0,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [],
+   "expected_alert": null,
+   "alert_ok": true
+  },
+  {
+   "file": "04_black_suv_driveway.jpg",
+   "zone": "driveway",
+   "time": "23:10",
+   "caption": "A black Cadillac Escalade is parked in the driveway.",
+   "latency_s": 15.85,
+   "vlm_objects": [
+    "Black Cadillac Escalade parked"
+   ],
+   "vlm": {
+    "expected": 1,
+    "found": 1,
+    "attributes_ok": 1,
+    "attributes_checked": 1,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "parser_on_vlm_caption": {
+    "expected": 1,
+    "found": 0,
+    "attributes_ok": 0,
+    "attributes_checked": 0,
+    "false_alarms": [],
+    "min_vehicles_ok": true
+   },
+   "alerts": [
+    "AFTER_HOURS_VEHICLE"
+   ],
+   "expected_alert": "AFTER_HOURS_VEHICLE",
+   "alert_ok": true
+  }
+ ]
+}

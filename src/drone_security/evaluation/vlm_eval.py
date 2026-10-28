@@ -39,7 +39,7 @@ class PrecomputedAnalyzer:
         return self.detections.get(frame.frame_id, [])
 
 
-def run_vlm_check(config: PropertyConfig, vision, images_dir: Path = IMAGES_DIR, client=None) -> dict:
+def run_vlm_check(config: PropertyConfig, vision, images_dir: Path = IMAGES_DIR, client=None, on_row=None) -> dict:
     manifest = json.loads((images_dir / "manifest.json").read_text(encoding="utf-8"))
     precomputed = PrecomputedAnalyzer()
     pipeline = SecurityPipeline(config, analyzer=precomputed)
@@ -69,6 +69,8 @@ def run_vlm_check(config: PropertyConfig, vision, images_dir: Path = IMAGES_DIR,
             "expected_alert": item["alert"],
             "alert_ok": (item["alert"] in [a.rule_id for a in result.alerts]) if item["alert"] else not result.alerts,
         })
+        if on_row:
+            on_row(rows[-1])
     summary = {name: _aggregate([r[name] for r in rows]) for name in ("vlm", "parser_on_vlm_caption")}
     summary["alert_agreement"] = round(sum(r["alert_ok"] for r in rows) / len(rows), 3)
     summary["mean_latency_s"] = round(sum(r["latency_s"] for r in rows) / len(rows), 2)
