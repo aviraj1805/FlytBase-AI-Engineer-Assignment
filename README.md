@@ -95,6 +95,7 @@ held-out wording, context experiment). The model is chosen by listing what the k
 | Offline Q&A, held-out questions | 7/12 correct, 0 made-up citations (20/20 on the tuned dev set) | [qa_heldout_eval.md](docs/results/qa_heldout_eval.md) |
 | Agent context at 200,000 frames | 2,442 tokens (hierarchical) vs 6,862,855 (every frame) | [benchmark.md](docs/results/benchmark.md) |
 | Ingest at 200,000 frames (310 days) | 4,976 frames/s; indexed queries < 1 ms; DB 96.5 MB | same |
+| Real-time budget per frame (parse, track, rules, index) | median 0.19 ms, p99 under 2 ms at 200,000 frames, even on battery | [benchmark_battery.md](docs/results/benchmark_battery.md) |
 | Gemini experiments (VLM on 7 real photos, embeddings, LLM perception, context experiment) | not run: no API key was available during development; `python make.py eval-gemini` produces them | [REPORT 5.6](docs/REPORT.md) |
 
 The 1.00 scores are on captions the parser was developed against; the held-out and ablation numbers are

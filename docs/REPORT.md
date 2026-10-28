@@ -211,7 +211,9 @@ SQLite file on a laptop SSD (Intel Core, Windows 11, Python 3.10).
 (Median of 30 repeats; p95 in the results file.) **Throughput depends on the laptop's power state:** the same
 commit ingested 10,000 frames at 6,310 frames/s on the run above and at 2,541 frames/s later the same morning on
 battery (CPU held at 2.1 GHz). Ratios and latency trends are the meaningful part; absolute numbers are this
-laptop's. Indexed lookups are flat. Full-text and entity-history
+laptop's. Per-frame processing time, the real-time budget for alerts, was measured on the battery re-run from a
+fresh clone (`benchmark_battery.md`): median 0.19 ms and p99 under 2 ms at every size up to 200,000 frames.
+Indexed lookups are flat. Full-text and entity-history
 latency grow with the number of matching rows (the same intruder appears every simulated day) but stay under
 8 ms. **The first 200k run found three real scaling bugs**, fixed before these numbers: entity rows were
 re-serialising every past visit on each sighting (ingest fell to 2,470 frames/s), the one-day summary query

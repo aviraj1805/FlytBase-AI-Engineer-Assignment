@@ -1,0 +1,226 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T10:18:34",
+  "command": "python -m drone_security benchmark",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "sizes": [
+  10000,
+  50000,
+  100000,
+  200000
+ ],
+ "repeats": 30,
+ "rows": [
+  {
+   "frames": 10000,
+   "days": 16,
+   "generate_s": 0.62,
+   "ingest_s": 3.88,
+   "ingest_fps": 2579,
+   "frame_latency_p50_ms": 0.185,
+   "frame_latency_p99_ms": 1.459,
+   "detections": 1695,
+   "entities": 148,
+   "alerts": 296,
+   "raw_rule_firings": 1061,
+   "db_mb": 4.9,
+   "unique_captions": 129,
+   "vector_fit_s": 0.06,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 1.297,
+     "p95_ms": 1.639
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.083,
+     "p95_ms": 0.211
+    },
+    "object + zone + time": {
+     "p50_ms": 0.183,
+     "p95_ms": 0.247
+    },
+    "entity history (F150)": {
+     "p50_ms": 1.329,
+     "p95_ms": 1.664
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 1.379,
+     "p95_ms": 1.631
+    },
+    "full text (BM25)": {
+     "p50_ms": 0.473,
+     "p95_ms": 0.661
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 1.141,
+     "p95_ms": 1.397
+    },
+    "summaries for one day": {
+     "p50_ms": 0.186,
+     "p95_ms": 0.279
+    }
+   },
+   "context_tokens_hierarchical": 2376,
+   "context_tokens_naive": 339316
+  },
+  {
+   "frames": 50000,
+   "days": 78,
+   "generate_s": 2.75,
+   "ingest_s": 22.15,
+   "ingest_fps": 2257,
+   "frame_latency_p50_ms": 0.189,
+   "frame_latency_p99_ms": 1.848,
+   "detections": 8431,
+   "entities": 676,
+   "alerts": 1474,
+   "raw_rule_firings": 5256,
+   "db_mb": 24.1,
+   "unique_captions": 129,
+   "vector_fit_s": 0.19,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 1.407,
+     "p95_ms": 1.784
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.081,
+     "p95_ms": 0.107
+    },
+    "object + zone + time": {
+     "p50_ms": 0.179,
+     "p95_ms": 0.259
+    },
+    "entity history (F150)": {
+     "p50_ms": 3.191,
+     "p95_ms": 3.584
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 1.184,
+     "p95_ms": 1.89
+    },
+    "full text (BM25)": {
+     "p50_ms": 1.35,
+     "p95_ms": 1.656
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 2.044,
+     "p95_ms": 2.418
+    },
+    "summaries for one day": {
+     "p50_ms": 0.179,
+     "p95_ms": 0.227
+    }
+   },
+   "context_tokens_hierarchical": 2226,
+   "context_tokens_naive": 1707106
+  },
+  {
+   "frames": 100000,
+   "days": 155,
+   "generate_s": 5.36,
+   "ingest_s": 47.15,
+   "ingest_fps": 2121,
+   "frame_latency_p50_ms": 0.194,
+   "frame_latency_p99_ms": 1.969,
+   "detections": 16885,
+   "entities": 1334,
+   "alerts": 2941,
+   "raw_rule_firings": 10457,
+   "db_mb": 48.2,
+   "unique_captions": 129,
+   "vector_fit_s": 0.36,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 1.338,
+     "p95_ms": 1.711
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.085,
+     "p95_ms": 0.138
+    },
+    "object + zone + time": {
+     "p50_ms": 0.188,
+     "p95_ms": 0.283
+    },
+    "entity history (F150)": {
+     "p50_ms": 5.269,
+     "p95_ms": 6.027
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 1.169,
+     "p95_ms": 1.579
+    },
+    "full text (BM25)": {
+     "p50_ms": 8.022,
+     "p95_ms": 9.908
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 8.68,
+     "p95_ms": 9.389
+    },
+    "summaries for one day": {
+     "p50_ms": 0.239,
+     "p95_ms": 0.263
+    }
+   },
+   "context_tokens_hierarchical": 2678,
+   "context_tokens_naive": 3416763
+  },
+  {
+   "frames": 200000,
+   "days": 310,
+   "generate_s": 10.86,
+   "ingest_s": 93.48,
+   "ingest_fps": 2139,
+   "frame_latency_p50_ms": 0.189,
+   "frame_latency_p99_ms": 1.986,
+   "detections": 33755,
+   "entities": 2646,
+   "alerts": 5883,
+   "raw_rule_firings": 20915,
+   "db_mb": 96.5,
+   "unique_captions": 129,
+   "vector_fit_s": 0.71,
+   "latency": {
+    "object: all truck detections": {
+     "p50_ms": 1.289,
+     "p95_ms": 1.453
+    },
+    "time range: one hour of frames": {
+     "p50_ms": 0.084,
+     "p95_ms": 0.104
+    },
+    "object + zone + time": {
+     "p50_ms": 0.184,
+     "p95_ms": 0.212
+    },
+    "entity history (F150)": {
+     "p50_ms": 15.665,
+     "p95_ms": 16.57
+    },
+    "alerts HIGH+ (first 100)": {
+     "p50_ms": 1.168,
+     "p95_ms": 1.419
+    },
+    "full text (BM25)": {
+     "p50_ms": 15.52,
+     "p95_ms": 16.425
+    },
+    "hybrid text (BM25 + TF-IDF)": {
+     "p50_ms": 15.877,
+     "p95_ms": 17.117
+    },
+    "summaries for one day": {
+     "p50_ms": 0.207,
+     "p95_ms": 0.229
+    }
+   },
+   "context_tokens_hierarchical": 2442,
+   "context_tokens_naive": 6862855
+  }
+ ]
+}
