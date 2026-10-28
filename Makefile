@@ -2,6 +2,6 @@
 # `python make.py <target>` and get exactly the same behaviour as `make <target>`.
 PY ?= python
 
-.PHONY: setup run test demo eval eval-gemini benchmark report
-setup run test demo eval eval-gemini benchmark report:
+.PHONY: setup run test demo eval eval-gemini benchmark report ui ui-check
+setup run test demo eval eval-gemini benchmark report ui ui-check:
 	$(PY) make.py $@

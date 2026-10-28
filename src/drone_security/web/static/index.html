@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drone Security Analyst</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='5' fill='%234f8cff'/><g stroke='%234f8cff' stroke-width='3'><path d='M5 5l7 7M27 5l-7 7M5 27l7-7M27 27l-7-7'/></g></svg>">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/vendor/chart.umd.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Screens">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="5"/><g><path d="M5 5l7 7M27 5l-7 7M5 27l7-7M27 27l-7-7"/></g><circle cx="5" cy="5" r="3.5"/><circle cx="27" cy="5" r="3.5"/><circle cx="5" cy="27" r="3.5"/><circle cx="27" cy="27" r="3.5"/></svg>
+        <div><strong>Drone Security</strong><span>Analyst Agent</span></div>
+      </div>
+      <nav id="nav"></nav>
+      <div class="sidebar-foot">
+        <button id="demo-btn" class="btn btn-accent full" title="Guided walkthrough for the demo video (D)">&#9654; Demo mode</button>
+        <button id="theme-btn" class="btn btn-ghost full" title="Toggle light / dark">Toggle theme</button>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <span id="property-name" class="muted">Loading…</span>
+          <span id="footage-day" class="chip"></span>
+        </div>
+        <div class="topbar-right">
+          <span id="replay-mini" class="replay-mini" hidden></span>
+          <span id="mode-badge" class="badge">…</span>
+        </div>
+      </header>
+      <main id="view" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <!-- frame detail drawer, shared by every screen -->
+  <div id="drawer" class="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <div class="drawer-backdrop" data-close></div>
+    <section class="drawer-panel">
+      <header><h2 id="drawer-title">Frame</h2><button class="btn btn-ghost" data-close aria-label="Close">&#10005;</button></header>
+      <div id="drawer-body"></div>
+    </section>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="demo" class="demo" hidden></div>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

@@ -9,7 +9,8 @@ Deadline: **Thursday 29 Oct 2026, 13:15 IST**.
 | Feature spec (value + 2-3 requirements) | `docs/FEATURE_SPEC.md` | done |
 | Architecture and design artifacts | `docs/ARCHITECTURE.md`, `docs/diagrams/*.mmd/.svg/.png` | done |
 | Code: VLM scripts, LangChain agent, context management, tests | `src/drone_security/perception/gemini_analyzer.py`, `agent/langchain_agent.py`, `memory.py`, `tests/` | done |
-| QA tests + testing documentation | `tests/` (130), `docs/TESTING.md` | done |
+| QA tests + testing documentation | `tests/` (154), `docs/TESTING.md` | done |
+| Web UI (all features, demo mode) | `make ui` / `python make.py ui`, `src/drone_security/web/`, `docs/screenshots/` | done |
 | README (setup, architecture, AI tools, limitations) | `README.md` | done |
 | PDF report (+ source) | `docs/REPORT.pdf`, `docs/REPORT.md` (`python make.py report` rebuilds the PDF) | done |
 | Results behind every number | `docs/results/` | done |
@@ -51,7 +52,8 @@ gh api -X PUT repos/aviraj1805/FlytBase-AI-Engineer-Assignment/collaborators/ass
 ```bash
 git clone https://github.com/aviraj1805/FlytBase-AI-Engineer-Assignment.git check && cd check
 python make.py setup
-python make.py test        # expect: 130 passed
+python make.py test        # expect: 154 passed
+python make.py ui          # web UI on http://localhost:8000
 python make.py demo        # 8 scenes, no errors
 ```
 

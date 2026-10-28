@@ -327,17 +327,50 @@ of strings into a single vector unless each text is sent as its own `Content`; a
 
 ## 7. Testing
 
-130 automated tests (`python make.py test`), described in `docs/TESTING.md`: unit tests for the parser, rules
+154 automated tests (`python make.py test`), described in `docs/TESTING.md`: unit tests for the parser, rules
 (every rule, explanations, evidence, cooldown, escalation, correlation, YAML validation), tracker, index,
 retrieval, memory and agent; scenario tests that score against ground truth; and edge cases (duplicates,
 out-of-order and late frames, missing and broken telemetry, malformed records, midnight rollover, empty day,
 the brief's text format). Gemini code paths are tested with fake clients (model selection, retries,
 daily-quota fail-fast, per-text embeddings, normalisation, batching, fallbacks) and were then run live (5.6).
 
-## 8. Demo videos
+## 8. Web UI and demo videos
 
-Recorded from `python make.py demo` following `docs/DEMO_SCRIPT.md` (8 scenes: feed, real-time alerts, rest
-of day, index queries, agent Q&A, summaries, ground-truth scores, scalability). The video links are listed in
+**Web UI.** `make ui` (or `python make.py ui`) processes the scenario day and serves a browser console at
+http://localhost:8000. It works offline and needs no npm or build step; a badge shows "Offline mode" or
+"Gemini: *model name*". It is a thin layer: FastAPI routes (`src/drone_security/web/`) call the existing
+modules, and a plain HTML/JS frontend draws the results. Every number comes from the processed index, a live
+pipeline, or the saved outputs in `docs/results`. Eleven screens cover the brief:
+
+* **Mission Control** replays the day over Server-Sent Events. Each connection runs its own `SecurityPipeline`,
+  so alerts are raised live by the rule engine. Seeking re-processes the earlier frames, because the tracker
+  and cooldowns depend on history. The screen shows telemetry, a property map (zones, the drone's GPS
+  fix, objects at their detected zone) and a scrubber with alert markers.
+* **Live Alerts** shows severity, rule, zone, the explanation, the action and evidence frames, with filters and
+  acknowledgement. **Event Log** has the brief-style log lines with confidence.
+* **Frame Index Explorer** runs structured and full-text queries and shows the SQL SQLite actually executed
+  (captured with `sqlite3.set_trace_callback`), with presets for "show all truck events" and "main gate,
+  00:00-01:00".
+* **Agent Chat** shows the tool calls, clickable [fN] citations and the citation check. **Entity Tracker**
+  shows visits, match confidence and the identity traits that matched. **Summaries** shows the one-sentence
+  summary, the briefing and the day → hour → 10-minute → frame tree. **Context Manager** shows the
+  hierarchical prompt against the naive one.
+* **QA / Tests** runs pytest from the browser. **Evaluation** charts the saved results and can run a small
+  benchmark live. **Architecture** shows the diagrams. A **Demo mode** walks through all of it.
+
+The API has its own tests (`tests/test_web_api.py`). `python make.py ui-check` opens every screen in headless
+Chromium, fails on console errors, runs the main flows and saves `docs/screenshots/`. Wiring the chat exposed
+one backend inaccuracy: the offline analyst answered the brief's "Did the same truck enter twice?" with a list
+of truck sightings and lost the follow-up subject. It now checks every tracked identity of that kind for
+repeat visits. A test covers the fix, and the dev and held-out Q&A scores did not change.
+
+![Mission Control during the 02:14 intrusion](screenshots/01_mission_control.png)
+
+![Frame Index Explorer: "show all truck events" with the SQL that ran](screenshots/04_frame_index_trucks.png)
+
+**Demo videos.** Recorded from the web UI (Demo mode) or from `python make.py demo`, following
+`docs/DEMO_SCRIPT.md` (8 terminal scenes: feed, real-time alerts, rest of day, index queries, agent Q&A,
+summaries, ground-truth scores, scalability; and the UI walkthrough). The video links are listed in
 `SUBMISSION_CHECKLIST.md` once uploaded.
 
 ## 9. With more time
@@ -349,8 +382,8 @@ of day, index queries, agent Q&A, summaries, ground-truth scores, scalability). 
   to replace fixed thresholds.
 * **Agent evaluation at scale**: a larger, independently written question set and an LLM-as-judge with
   human spot checks, instead of regex grading.
-* **Production**: Postgres + pgvector for multi-site, an alert delivery channel, and an operator UI on top of
-  the same tools.
+* **Production**: Postgres + pgvector for multi-site, an alert delivery channel, and authentication plus
+  persisted acknowledgements for the web UI (today a single-operator demo console).
 
 ## 10. How AI tools helped (and what I must own)
 
@@ -358,7 +391,7 @@ of day, index queries, agent Q&A, summaries, ground-truth scores, scalability). 
 audited the first version, proposed the P0/P1/P2 plan, wrote the modules, tests, experiments and these
 documents, ran every command, and fixed what the runs revealed (the cross-thread SQLite crash, the three
 scaling bugs, parser gaps found by the evaluation). The first version of the repository was also generated
-with Claude Code. **Gemini** is part of the product (perception, Q&A, embeddings), not a development tool.
+with Claude Code, and so was the web UI (API layer, frontend, API tests, headless screen check). **Gemini** is part of the product (perception, Q&A, embeddings), not a development tool.
 
 What I reviewed and decided myself, and what I need to be able to defend in an interview:
 

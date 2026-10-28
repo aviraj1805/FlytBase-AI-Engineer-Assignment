@@ -1,6 +1,6 @@
 # Demo script
 
-Two recordings: **Video 1** (about 7 minutes) walks through the system with `python make.py demo`; **Video 2**
+Two recordings: **Video 1** (about 7 minutes) walks through the system, either in the web UI (`make ui`, Demo mode, recommended) or in the terminal with `python make.py demo`; **Video 2**
 (about 3 minutes) shows the Gemini paths (agent, VLM on real photos, results). Each scene below matches a
 `SCENE n` banner in the console. Timings are targets; the talking points are written to be read aloud.
 
@@ -8,7 +8,7 @@ Two recordings: **Video 1** (about 7 minutes) walks through the system with `pyt
 
 ```bash
 python make.py setup            # once
-python make.py test             # show "128 passed" if you want it on screen
+python make.py test             # show "154 passed" if you want it on screen
 ```
 
 * Terminal at least 110 columns wide, font size 14+, dark background.
@@ -91,6 +91,37 @@ python make.py test             # show "128 passed" if you want it on screen
 > under a millisecond. The full benchmark goes to two hundred thousand frames, about ten months of patrols:
 > still about five thousand frames a second, and the agent's context stays around 2,400 tokens while
 > pasting every frame would need almost seven million. That is the point of the hierarchical memory."
+
+---
+
+## Video 1 alternative: the web UI (recommended, about 7 minutes)
+
+Start with `make ui` (or `python make.py ui`). The browser opens http://localhost:8000. Record the browser
+window at 1920x1080 and close other tabs. Press **Demo mode** (bottom left, or the `D` key). The panel walks
+through the 15 steps below and drives each screen for you: **Next** / `PageDown` moves forward, `Esc`
+leaves. The panel shows the talking point for each step; you can read it or say it your own way. Before
+recording, run through once so the pages are warm.
+
+| Step | Screen | What happens on screen | Say |
+|---|---|---|---|
+| 1 | Mission Control | Telemetry cards, map, empty frame panel | "This is one simulated patrol day at a logistics yard. Each frame is a caption plus telemetry: GPS, altitude, battery. Everything on screen comes from the real pipeline, running on the server as the frames stream in." |
+| 2 | Mission Control | Replay starts from 00:00. The 00:01 HIGH alert pops up, the drone moves on the map | "I press play. Each frame goes through perception, tracking, the rule engine and the index, live. At one minute past midnight a person in a dark hoodie loiters at the main gate. That is a HIGH alert, because it is night." |
+| 3 | Mission Control | Jumps to the first CRITICAL marker (02:14) | "The red markers on the timeline are alerts. Here is the critical one: a masked person climbing the back fence. The alert lists exactly which rule conditions held, and cites its evidence frame." |
+| 4 | Live Alerts | The alert feed | "This is the alert channel. Each alert has a severity colour, the rule id, time, zone, the explanation, a recommended action and its evidence frames. I can filter by severity, rule or zone, and acknowledge what I have handled." |
+| 5 | Event Log | Search "F150" | "The event log uses the format from the brief: 'Blue Ford F150 spotted at garage, 09:16', with perception and re-identification confidence. Clicking a row opens the exact frame." |
+| 6 | Frame Index | "Show all truck events" preset | "Every frame is indexed in SQLite. 'Show all truck events' is an indexed lookup, and this panel shows the SQL SQLite actually ran, so it is a real query. The F150 and the blue Silverado come back as two different entities." |
+| 7 | Frame Index | "Main gate, 00:00–01:00" preset | "Time plus zone, the other example from the brief. The histogram shows where the hits fall in the day. Free text uses keyword and vector search together." |
+| 8 | Agent Chat | Asks "Did the same truck enter twice?", then "When did it leave?" | "Now the agent. It shows which tool it called, and it cites frames I can click. Yes, the F150 came twice; the Silverado only once. The follow-up 'When did it leave?' remembers what 'it' is. The green check means every cited frame was actually returned by a tool." |
+| 9 | Agent Chat | Asks about the licence plate | "The footage never records plates, so it says 'not enough evidence' instead of guessing." |
+| 10 | Entity Tracker | The F150 card | "Every identity the tracker re-identified: its visits on a 24-hour bar, the match confidence, and why it matched. Colour, make and model agreed, each with its weight." |
+| 11 | Summaries | Summary, briefing, tree | "The one-sentence summary of the day, the briefing for the owner, and the hierarchy the agent uses: day, hours, ten-minute windows, down to the raw frames." |
+| 12 | Context Manager | Token bar and chart | "This is what the agent's prompt holds: hourly summaries plus a rolling window, inside a token budget, compared with pasting every frame. Drag the budget and the sections fill in priority order." |
+| 13 | QA / Tests | The suite runs | "The full test suite, run from the browser and grouped by area. That includes the brief's own examples: truck logged correctly, alert triggered at midnight." |
+| 14 | Evaluation | Charts | "Scores against a ground truth the system never reads, the harder held-out results, and the benchmark up to two hundred thousand frames. Every chart is drawn from the saved result files." |
+| 15 | Architecture | Diagrams | "And how it fits together. The UI is a thin layer: the same modules run from the command line." |
+
+With a Gemini key, the badge shows the model, and step 8 uses the Gemini agent (Video 2, scene C, can be
+recorded in the chat screen instead of the terminal).
 
 ---
 

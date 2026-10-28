@@ -40,6 +40,19 @@ def test_vehicle_visit_count_and_pronoun_follow_up(analyst):
     assert "09:42" in follow_up.text and "17:10" in follow_up.text
 
 
+def test_same_truck_twice_checks_every_truck_and_follow_up_resolves(scenario):
+    # The brief's own question names a kind of vehicle, not one identity; it used to list truck sightings.
+    _, pipeline, _ = scenario
+    analyst = SecurityAnalyst(pipeline.index, pipeline.config, use_llm=False)
+    answer = analyst.ask("Did the same truck enter twice?")
+    assert answer.tool_calls == [("entity_history", {"description": "truck"})]
+    assert answer.text.startswith("Yes") and "Blue Ford F150" in answer.text and "2 visits" in answer.text
+    assert "[f256]" in answer.text and "[f454]" in answer.text
+    assert "Silverado" in answer.text  # the other blue pickup is named as a single visit
+    follow_up = analyst.ask("When did it leave?")
+    assert "09:42" in follow_up.text and "17:10" in follow_up.text
+
+
 def test_two_blue_pickups_are_reported_as_different_vehicles(analyst):
     answer = analyst.ask("Was the blue Chevrolet Silverado the same vehicle as the blue Ford F150?")
     assert answer.text.startswith("No") and "Blue Ford F150" in answer.text and "Silverado" in answer.text
