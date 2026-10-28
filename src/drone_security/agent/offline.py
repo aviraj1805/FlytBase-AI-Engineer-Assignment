@@ -86,6 +86,10 @@ class OfflineAnalyst:
             text = self._drone(window)
         elif re.search(r"\bsame\b.*\bas\b|\bdifferent\b", q) and len(_identities(q)) >= 2:
             text = self._same_entity(q)
+        elif (subject and not self._trackable(subject) and re.search(r"\bsame\b|twice|more than once|again|repeat", q)
+              and re.search(r"enter|visit|c[ao]me|arriv|return|seen|again|twice", q)):
+            # "Did the same truck enter twice?" names a kind of object, not one identity: check every one of them
+            text = self._repeat_visitors(subject)
         elif (subject and self._trackable(subject)
               and re.search(r"how many times|how often|visit|when did|came back|come back|return|enter|arriv|leave|\bleft\b(?! open)|history", q)):
             text = self._entity(subject, q)
@@ -191,6 +195,29 @@ class OfflineAnalyst:
         if e["alerts"]:
             text += "\nRelated alerts:\n" + "\n".join(f"  - {a['time']} [{a['severity']}] {a['message']} [f{a['frame_id']}]"
                                                      for a in e["alerts"])
+        return text
+
+    def _repeat_visitors(self, subject: str) -> str:
+        report = self._call("entity_history", description=subject)
+        if not report["found"]:
+            return f"{NOT_ENOUGH_EVIDENCE} No tracked {subject} in the footage."
+        repeat = [e for e in report["entities"] if e["visit_count"] >= 2]
+        once = [e for e in report["entities"] if e["visit_count"] < 2]
+        if not repeat:
+            # entity_history ranks by visit count, so if its top matches made one visit, every match did
+            return (f"No: no tracked {subject} made more than one visit (e.g. "
+                    + "; ".join(f"{e['name']} ({e['entity_id']}) at {e['visits'][0]['start']} [f{e['visits'][0]['frame_ids'][0]}]"
+                                for e in once) + ").")
+        self.focus = repeat[0]["name"].lower()  # follow-ups ("when did it leave?") refer to the repeat visitor
+        lines = []
+        for e in repeat:
+            visits = "; ".join(f"{v['start']}-{v['end']} [f{v['frame_ids'][0]}]" for v in e["visits"])
+            lines.append(f"{e['name']} ({e['entity_id']}, re-ID confidence {e['reid_confidence']:.2f}) made "
+                         f"{e['visit_count']} visits: {visits}.")
+        text = "Yes. " + " ".join(lines)
+        if once:
+            text += (f" Every other tracked {subject} made one visit (e.g. "
+                     + ", ".join(f"{e['name']} ({e['entity_id']})" for e in once) + ").")
         return text
 
     def _same_entity(self, q: str) -> str:

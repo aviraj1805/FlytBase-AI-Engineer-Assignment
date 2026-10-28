@@ -8,6 +8,8 @@
     python make.py eval-gemini Gemini experiments (needs GEMINI_API_KEY): models, VLM, retrieval, Q&A
     python make.py benchmark   scalability benchmark (10k / 50k / 100k / 200k frames) -> docs/results
     python make.py report      docs/REPORT.md -> docs/REPORT.pdf (needs Edge, Chrome or Chromium)
+    python make.py ui          web UI on http://localhost:8000 (sets up .venv first if needed)
+    python make.py ui-check    headless browser check of every UI screen -> docs/screenshots (needs Playwright)
 """
 from __future__ import annotations
 
@@ -119,6 +121,15 @@ def report() -> None:
     print(f"wrote {target}")
 
 
+def ui() -> None:
+    """One command from a fresh clone: create the venv if it is missing or lacks the UI packages, then serve."""
+    probe = subprocess.run([venv_python(), "-c", "import fastapi, uvicorn, drone_security"], cwd=ROOT,
+                           capture_output=True, env=dict(os.environ, PYTHONPATH=str(ROOT / "src")))
+    if not VENV.exists() or probe.returncode:
+        setup()
+    sh(venv_python(), str(ROOT / "run_ui.py"), *sys.argv[2:])
+
+
 TARGETS = {
     "setup": setup,
     "run": lambda: app("run"),
@@ -128,11 +139,15 @@ TARGETS = {
     "eval-gemini": evaluate_gemini,
     "benchmark": lambda: app("benchmark"),
     "report": report,
+    "ui": ui,
+    "ui-check": lambda: sh(venv_python(), str(ROOT / "scripts" / "ui_check.py")),
 }
 
 
 def main() -> None:
     names = sys.argv[1:] or ["help"]
+    if names[0] == "ui":  # `python make.py ui --port 8001 --no-browser`: the rest are options for run_ui.py
+        names = ["ui"]
     for name in names:
         if name not in TARGETS:
             print(__doc__)

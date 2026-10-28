@@ -14,3 +14,5 @@ data/frames/
 .idea/
 .vscode/
 /*.pdf
+*.egg-info/
+docs/screenshots/*.tmp.png
