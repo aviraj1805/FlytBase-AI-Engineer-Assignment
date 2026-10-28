@@ -1,6 +1,6 @@
 # Testing
 
-Two layers: **automated tests** (`python make.py test`, 128 tests, about 1 minute, no network) check that
+Two layers: **automated tests** (`python make.py test`, 130 tests, about 1 minute, no network) check that
 each component does what it claims, and **experiments** (`python make.py eval`, `benchmark`, `eval-gemini`)
 measure how well the whole system works against ground truth. Experiments write their raw output to
 `docs/results/`, so every number in the README and report can be traced to a file and a command.
@@ -32,7 +32,7 @@ deterministic and free, and the live Gemini behaviour is measured separately by 
 | test_index.py | 9 | every frame indexed with telemetry; "show all truck events"; time range, zone, make/model, entity queries; full text via enrichment tags; alerts store explanation and evidence; entity visits; telemetry near a time and extremes; persistence; re-indexing replaces detections |
 | test_retrieval_memory.py | 8 | TF-IDF matches spelling variants; RRF; hybrid vs keyword; filters; summaries at every level with citations; hour summary cites its alerts; context within budget and far smaller than the whole video; live and rebuilt memory agree |
 | test_agent.py | 14 | inventory, truck events, visit count + pronoun follow-up, Silverado vs F150, alert questions, time windows, drone status, briefing and summary, **abstention** on unanswerable questions, every offline citation points at a retrieved frame, exactly five tools, LangChain loop with a scripted fake model, made-up citations flagged, LLM failure degrades to the offline answer |
-| test_gemini.py | 11 | newest stable Flash model chosen from a listed set; override; key from `.env`; offline flag wins; 429 retried; output normalised to the parser vocabulary; captions batched and cached; API failure falls back to the parser; VLM returns caption + objects; usage accounting; real client needs a key |
+| test_gemini.py | 13 | newest stable Flash model chosen from a listed set; override; key from `.env`; offline flag wins; 429 retried; output normalised to the parser vocabulary; captions batched and cached; API failure falls back to the parser; VLM returns caption + objects; usage accounting; real client needs a key; one embedding per text; daily-quota errors fail fast |
 | test_evaluation.py | 10 | regex grading, ranking metrics, ground-truth relevance, offline Q&A never cites unseen frames, VLM check scoring with a fake VLM, Gemini summarizer wiring, attribute dropout, v1 tracker baseline, paraphrase experiment, benchmark smoke |
 
 ## Scenarios
@@ -68,8 +68,10 @@ python make.py eval                 # writes docs/results/eval_scenario_rules.*,
                                     # qa_context_eval.*, qa_heldout_eval.* (and paraphrase_eval.* if the
                                     # reworded captions exist)
 python make.py benchmark            # docs/results/benchmark.* and benchmark_*.png (about 2 minutes)
-python make.py eval-gemini          # with GEMINI_API_KEY: gemini_models.json, vlm_check.*, Gemini rows in
-                                    # retrieval_eval, eval_scenario_gemini.*, paraphrase_eval.*, qa_*_eval.*
+python make.py eval-gemini          # with GEMINI_API_KEY (sized for a free-tier key): gemini_models.json,
+                                    # vlm_check.*, Gemini rows in retrieval_eval, paraphrase_eval.*,
+                                    # qa_gemini_subset_eval.*  (GEMINI_MODEL=<name> pins a model, as in the
+                                    # recorded runs; each result file records the model it used)
 ```
 
 Single experiments: `python -m drone_security eval --seeds 10`, `eval-retrieval [--gemini]`, `ablation`,
@@ -81,7 +83,7 @@ Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, e
 
 | Experiment | Result |
 |---|---|
-| Test suite | 128 passed |
+| Test suite | 130 passed |
 | Scenario, rule parser, 10 seeds | alert P 1.00 / R 1.00 / F1 1.00; detection P 0.991 / R 1.00; re-ID F1 1.00; 19 alerts for 20 incidents per seed |
 | Re-ID ablation (25% attributes dropped) | F1 0.917 vs 0.430 for the v1 exact-signature matcher |
 | Noise control | 19 alerts/day with cooldown + correlation, 21 with cooldown only, 67.4 with neither; recall 1.00 in all three |
@@ -90,7 +92,11 @@ Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, e
 | Context size, one day | 1,622 tokens hierarchical vs 21,763 naive |
 | Benchmark, 200k frames | 4,976 frames/s ingest, 96.5 MB, indexed queries < 1 ms, hybrid text 7.2 ms (mains power; the same code on battery ingests about 2.4x slower) |
 | Fresh-clone re-run (battery) | `eval` results identical to the committed ones; per-frame latency median 0.19 ms, p99 under 2 ms up to 200k frames (`benchmark_battery.md`) |
-| Gemini experiments | not run (no API key available during development); covered by fake-client tests; `python make.py eval-gemini` produces the result files |
+| Gemini model choice | 46 models listed, gemini-3.8-flash chosen (`gemini_models.json`); free-tier quota and 503 overload meant runs used the models below |
+| Gemini VLM, 7 real photos (gemini-3.5-flash) | object recall 1.00, attribute accuracy 1.00, 0 false alarms, expected alert 7/7; parser on the VLM caption: recall 0.857 |
+| Reworded captions (gemini-3.5-flash) | alert F1: parser 1.00 -> 0.769, Gemini analyzer 1.00 -> 1.00 |
+| Retrieval with Gemini embeddings | hybrid BM25 + Gemini nDCG@10 0.889 (offline hybrid 0.846) |
+| Context experiment (gemini-3.5-flash-lite, 6 questions) | naive 5/6 at 46,190 prompt tokens/question; hierarchical + tools 5/6 at 5,329; offline 3/6; 0 made-up citations |
 
 ## Known gaps
 
@@ -99,3 +105,6 @@ Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, e
 * The scripted day reuses one paraphrase pool across seeds, so seed-to-seed variance is small.
 * The VLM check uses seven images; it shows the path works on real photos, not a statistically strong
   accuracy estimate.
+* The Gemini runs used a free-tier key (20 requests per model per day) and the chosen gemini-3.8-flash was
+  overloaded that day, so results come from three different Gemini models (each file names its model) and the
+  context experiment covers 6 questions and 2 conditions, not the full 32 x 4.

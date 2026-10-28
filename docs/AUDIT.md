@@ -73,12 +73,12 @@ README, REPORT (markdown + PDF), diagrams (Mermaid + SVG/PNG), FEATURE_SPEC, TES
 | P0.2 seeded scenario + separate ground truth | done | `scenario.py`, `data/scenarios/day_script.yaml`, `generated_day/`; `tests/test_scenario.py` |
 | P0.3 robust ingestion | done | `ingest.py`, pipeline watermark; `tests/test_ingest_edge_cases.py` |
 | P0.4 declarative rules with evidence + explanations | done | `config/rules.yaml`, `rules/engine.py`; `tests/test_rules.py` |
-| P0.5 Gemini backends behind the same interfaces | implemented, tested with fakes | `gemini.py`, `perception/gemini_analyzer.py`; live run: see `docs/results/` and the report, section 5.6 |
+| P0.5 Gemini backends behind the same interfaces | done, run live (free-tier key) | `gemini.py`, `perception/gemini_analyzer.py`; `docs/results/vlm_check.md`, `paraphrase_eval.md`; report 5.6 |
 | P0.6 scoring against ground truth + edge-case tests | done | `evaluation/scenario_eval.py`, `docs/results/eval_scenario_rules.md` |
 | P1.7 re-identification with confidence, P/R, error analysis | done | `tracking.py`, `docs/results/ablation.md`, report 5.2 |
-| P1.8 hybrid retrieval on a labelled query set | done (offline); Gemini embeddings need the key | `retrieval.py`, `docs/results/retrieval_eval.md` |
+| P1.8 hybrid retrieval on a labelled query set | done, offline and with Gemini embeddings | `retrieval.py`, `docs/results/retrieval_eval.md` |
 | P1.9 grounded agent (5 tools, citations, abstention) | done | `agent/`, citation check; `tests/test_agent.py` |
-| P1.10 hierarchical context vs naive baseline | done (sizes, offline answers); Gemini answer quality needs the key | `memory.py`, `docs/results/qa_context_eval.md`, `benchmark.md` |
+| P1.10 hierarchical context vs naive baseline | done (sizes; answers on a 6-question subset with Gemini, free-tier limit) | `memory.py`, `docs/results/qa_gemini_subset_eval.md`, `benchmark.md` |
 | P1.11 summary, briefing, follow-up Q&A | done | `analysis.py`, `summary` command, demo scene 6 |
 | P2.12 benchmark 10k-200k with plots | done | `docs/results/benchmark.*` |
 | P2.13 evaluation report + ablations | done | `docs/results/ablation.md`, `docs/REPORT.md` sections 5-6 |

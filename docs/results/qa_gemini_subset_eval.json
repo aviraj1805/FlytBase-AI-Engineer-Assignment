@@ -1,0 +1,439 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T18:46:58",
+  "command": "python -m drone_security eval-qa (qa_gemini_subset.yaml)",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "seed": 7,
+ "frames": 646,
+ "questions": 6,
+ "question_file": "qa_gemini_subset.yaml",
+ "context_sizes": {
+  "naive": {
+   "chars": 87051,
+   "estimated_tokens": 21763,
+   "gemini_tokens": 46082
+  },
+  "hierarchical": {
+   "chars": 6488,
+   "estimated_tokens": 1622,
+   "gemini_tokens": 2858
+  },
+  "tools_only": {
+   "chars": 307,
+   "estimated_tokens": 77,
+   "gemini_tokens": 96
+  },
+  "summaries": {
+   "chars": 6488,
+   "estimated_tokens": 1622
+  },
+  "offline": {
+   "chars": 0,
+   "estimated_tokens": 0
+  }
+ },
+ "model": "gemini-3.5-flash-lite",
+ "results": {
+  "offline": {
+   "accuracy": 0.5,
+   "answerable_accuracy": 0.4,
+   "abstention_accuracy": 1.0,
+   "by_scope": {
+    "identity": 0,
+    "unanswerable": 1,
+    "whole day": 1,
+    "window": 0
+   },
+   "mean_prompt_tokens": 0,
+   "mean_latency_s": 0.0,
+   "answers_with_unsupported_citations": 0,
+   "api_errors": 0,
+   "rows": [
+    {
+     "id": "Q01",
+     "scope": "whole day",
+     "question": "How many times did the blue Ford F150 enter the property today?",
+     "answer": "Blue Ford F150 (V-002, re-ID confidence 1.00) made 2 visits with 10 sightings: 09:14-09:42 (main gate, garage) [f256]; 16:45-17:10 (main gate, garage) [f454].\nRelated alerts:\n  - 16:45 [LOW] Blue Ford F150 entered twice today (09:14, 16:45), 16:45. [f454]",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      256,
+      454
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q11",
+     "scope": "whole day",
+     "question": "What animals were seen today?",
+     "answer": "Objects seen in the footage:\n  animal: fox (1 sightings, 1 distinct, first [f45]); dog (1 sightings, 1 distinct, first [f525]); deer (1 sightings, 1 distinct, first [f160])",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      45,
+      160,
+      525
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H05",
+     "scope": "window",
+     "question": "Was any vehicle parked at the warehouse in the late morning?",
+     "answer": "Not enough evidence in the footage to answer that. No frame matches all of the words; the closest partial matches are:\n  - 06:06 [warehouse] Warehouse loading bay quiet [f173]\n  - 09:58 [warehouse] Warehouse loading bay quiet [f278]\n  - 08:40 [warehouse] Warehouse loading bay quiet [f239]\n  - 07:42 [warehouse] Warehouse doors shut, no activity [f210]\n  - 11:38 [warehouse] Warehouse doors shut, no activity [f314]",
+     "correct": false,
+     "latency_s": 0.01,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 2,
+     "cited": [
+      173,
+      210,
+      239,
+      278,
+      314
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H07",
+     "scope": "identity",
+     "question": "Did the gardener trigger any alerts?",
+     "answer": "19 alerts:\n  - 00:01 [HIGH] Person in dark hoodie loitering at main gate, 00:01. [f1]\n  - 02:14 [CRITICAL] Masked person in black jacket climbing at back fence, 02:14. [f67]\n  - 02:15 [HIGH] Masked person in black jacket in restricted area (warehouse) outside business hours, 02:15. [f68]\n  - 02:16 [CRITICAL] Masked person in black jacket tampering with an access point at warehouse, 02:16. [f69]\n  - 02:20 [MEDIUM] Door left open at warehouse, 02:20. [f71]\n  - 02:36 [HIGH] Masked person in black jacket at back fence during night hours, 02:36. [f79]\n  - 02:38 [CRITICAL] Masked person in black jacket climbing at back fence, 02:38. [f80]\n  - 02:50 [MEDIUM] GPS drift suspected over open area (HDOP 4.8), 02:50. [f86]\n  - 03:00 [HIGH] Drone 379 m from dock, outside the geofence, 03:00. [f91]\n  - 03:08 [MEDIUM] Drone battery low (25%) over main gate, 03:08. [f95]\n  - 03:34 [HIGH] Drone battery critical (14%) over front door, 03:34. [f108]\n  - 13:00 [MEDIUM] Drone at 8 m over backyard, below the 12 m minimum, 13:00. [f355]\n  - 14:51 [MEDIUM] Black bag unattended at main gate for 19 min, 14:51. [f398]\n  - 15:10 [MEDIUM] High wind 12.4 m/s at backyard, 15:10. [f407]\n  - 16:45 [LOW] Blue Ford F150 entered twice today (09:14, 16:45), 16:45. [f454]\n  - 22:45 [MEDIUM] Gate left open at main gate, 22:45. [f611]\n  - 23:10 [MEDIUM] Unrecognised Black SUV at driveway after hours, 23:10. [f623]\n  - 23:12 [HIGH] 2 people at garage during night hours, 23:12. [f624]\n  - 23:16 [CRITICAL] 2 people tampering with an access point at garage, 23:16. [f626]",
+     "correct": false,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      1,
+      67,
+      68,
+      69,
+      71,
+      79,
+      80,
+      86,
+      91,
+      95,
+      108,
+      355,
+      398,
+      407,
+      454,
+      611,
+      623,
+      624,
+      626
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H12",
+     "scope": "window",
+     "question": "What happened in the hour after the main gate was left open?",
+     "answer": "1 alert:\n  - 22:45 [MEDIUM] Gate left open at main gate, 22:45. [f611]",
+     "correct": false,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 1,
+     "cited": [
+      611
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q18",
+     "scope": "unanswerable",
+     "question": "What was the licence plate of the black SUV?",
+     "answer": "Not enough evidence in the footage to answer that. The frame descriptions never record licence plates, so I cannot tell from this footage.",
+     "correct": true,
+     "latency_s": 0.0,
+     "prompt_tokens": 0,
+     "model_calls": 0,
+     "tool_calls": 0,
+     "cited": [],
+     "unsupported_citations": []
+    }
+   ]
+  },
+  "naive": {
+   "accuracy": 0.833,
+   "answerable_accuracy": 0.8,
+   "abstention_accuracy": 1.0,
+   "by_scope": {
+    "identity": 0,
+    "unanswerable": 1,
+    "whole day": 1,
+    "window": 1
+   },
+   "mean_prompt_tokens": 46190,
+   "mean_latency_s": 12.48,
+   "answers_with_unsupported_citations": 0,
+   "api_errors": 0,
+   "rows": [
+    {
+     "id": "Q01",
+     "scope": "whole day",
+     "question": "How many times did the blue Ford F150 enter the property today?",
+     "answer": "The blue Ford F150 entered the property 2 times today (at 09:14 and 16:45) [f256, f454].",
+     "correct": true,
+     "latency_s": 12.24,
+     "prompt_tokens": 46195,
+     "model_calls": 1,
+     "tool_calls": 0,
+     "cited": [],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q11",
+     "scope": "whole day",
+     "question": "What animals were seen today?",
+     "answer": "The following animals were seen in the footage record today:\n- A fox crossing the backyard lawn [f45].\n- A deer grazing on the backyard lawn [f160].\n- A dog running on the backyard lawn [f525].",
+     "correct": true,
+     "latency_s": 6.81,
+     "prompt_tokens": 46185,
+     "model_calls": 1,
+     "tool_calls": 0,
+     "cited": [
+      45,
+      160,
+      525
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H05",
+     "scope": "window",
+     "question": "Was any vehicle parked at the warehouse in the late morning?",
+     "answer": "Yes, a blue Chevrolet Silverado was parked at the warehouse loading bay in the late morning [f297].",
+     "correct": true,
+     "latency_s": 6.84,
+     "prompt_tokens": 46191,
+     "model_calls": 1,
+     "tool_calls": 0,
+     "cited": [
+      297
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H07",
+     "scope": "identity",
+     "question": "Did the gardener trigger any alerts?",
+     "answer": "Not enough evidence in the footage to answer that. The footage records a gardener in the backyard at 13:10 [f360], but it is missing information on whether any alerts were triggered by them.",
+     "correct": false,
+     "latency_s": 5.44,
+     "prompt_tokens": 46186,
+     "model_calls": 1,
+     "tool_calls": 0,
+     "cited": [
+      360
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H12",
+     "scope": "window",
+     "question": "What happened in the hour after the main gate was left open?",
+     "answer": "The main gate was first left open at 22:45 [f611]. In the hour following that incident:\n\n* **22:48:** The backyard lawn was empty [f612].\n* **22:50:** The front porch was clear [f613].\n* **22:52:** The main gate was noted as left open with the street quiet [f614].\n* **22:54:** The driveway was empty with no vehicles [f615].\n* **22:56:** Nothing was moving around the garage [f616].\n* **22:58:** The warehouse loading bay was quiet [f617].\n* **23:00:** The back fence was quiet [f618].\n* **23:02:** The backyard was quiet [f619].\n* **23:04:** Nobody was at the front door [f620].\n* **23:06:** The main gate was still standing open with no one around [f621].\n* **23:08:** The driveway was empty with no vehicles [f622].\n* **23:10:** A black SUV entered the driveway with its headlights off [f623].\n* **23:12:** Two people left the black SUV and walked to the garage [f624].\n* **23:14:** The garage area was quiet [f625].\n* **23:16:** Two people tried the garage door handles [f626].\n* **23:18:** The warehouse loading bay was quiet [f627].\n* **23:20:** The rear fence line was clear [f628].\n* **23:22:** The backyard was quiet [f629].\n* **23:25:** The black SUV left through the main gate at speed [f630].\n* **23:28:** The front door was closed and the porch empty [f631].\n* **23:30:** The main gate was standing open with no one around [f632].\n* **23:32:** The driveway was empty with no vehicles [f633].\n* **23:34:** The garage door was closed with no activity [f634].\n* **23:36:** The warehouse loading bay was quiet [f635].\n* **23:38:** The back fence was intact with no one nearby [f636].\n* **23:40:** The main gate was closed and the street quiet [f637].\n* **23:42:** The backyard was clear with no movement [f638].\n* **23:44:** Nobody was at the front door [f639].\n* **23:46:** It was quiet at the main gate and the gate was shut [f640].\n* **23:48:** There were no vehicles in the driveway [f641].\n* **23:50:** The garage door was closed with no activity [f642].\n* **23:52:** The warehouse loading bay was quiet [f643].\n* **23:54:** The back fence was quiet [f644].\n* **23:56:** The backyard lawn was empty [f645].\n* **23:58:** Nobody was at the front door [f646].",
+     "correct": true,
+     "latency_s": 8.59,
+     "prompt_tokens": 46192,
+     "model_calls": 1,
+     "tool_calls": 0,
+     "cited": [
+      611,
+      612,
+      613,
+      614,
+      615,
+      616,
+      617,
+      618,
+      619,
+      620,
+      621,
+      622,
+      623,
+      624,
+      625,
+      626,
+      627,
+      628,
+      629,
+      630,
+      631,
+      632,
+      633,
+      634,
+      635,
+      636,
+      637,
+      638,
+      639,
+      640,
+      641,
+      642,
+      643,
+      644,
+      645,
+      646
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q18",
+     "scope": "unanswerable",
+     "question": "What was the licence plate of the black SUV?",
+     "answer": "Not enough evidence in the footage to answer that. The footage records a black SUV entering the driveway [f623], but the licence plate number is missing.",
+     "correct": true,
+     "latency_s": 34.96,
+     "prompt_tokens": 46189,
+     "model_calls": 1,
+     "tool_calls": 0,
+     "cited": [
+      623
+     ],
+     "unsupported_citations": []
+    }
+   ]
+  },
+  "hierarchical": {
+   "accuracy": 0.833,
+   "answerable_accuracy": 0.8,
+   "abstention_accuracy": 1.0,
+   "by_scope": {
+    "identity": 0,
+    "unanswerable": 1,
+    "whole day": 1,
+    "window": 1
+   },
+   "mean_prompt_tokens": 5329,
+   "mean_latency_s": 7.1,
+   "answers_with_unsupported_citations": 0,
+   "api_errors": 0,
+   "rows": [
+    {
+     "id": "Q01",
+     "scope": "whole day",
+     "question": "How many times did the blue Ford F150 enter the property today?",
+     "answer": "The blue Ford F150 entered the property 2 times today: at 09:14 [f256] and at 16:45 [f454].",
+     "correct": true,
+     "latency_s": 5.67,
+     "prompt_tokens": 3872,
+     "output_tokens": 42,
+     "model_calls": 1,
+     "tool_messages": 0,
+     "tool_calls": 0,
+     "cited": [
+      256,
+      454
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q11",
+     "scope": "whole day",
+     "question": "What animals were seen today?",
+     "answer": "The animals seen today are a fox at the backyard at 01:30 [f45], a deer at the backyard at 05:40 [f160], and a dog at the backyard at 19:30 [f525].",
+     "correct": true,
+     "latency_s": 4.94,
+     "prompt_tokens": 3862,
+     "output_tokens": 59,
+     "model_calls": 1,
+     "tool_messages": 0,
+     "tool_calls": 0,
+     "cited": [
+      45,
+      160,
+      525
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H05",
+     "scope": "window",
+     "question": "Was any vehicle parked at the warehouse in the late morning?",
+     "answer": "Yes, a blue Chevrolet Silverado was spotted at the warehouse in the late morning at 11:02 [f297].",
+     "correct": true,
+     "latency_s": 9.59,
+     "prompt_tokens": 3868,
+     "output_tokens": 28,
+     "model_calls": 1,
+     "tool_messages": 0,
+     "tool_calls": 0,
+     "cited": [
+      297
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H07",
+     "scope": "identity",
+     "question": "Did the gardener trigger any alerts?",
+     "answer": "Not enough evidence in the footage to answer that. The footage and working memory do not mention a gardener or any person identified as a gardener.",
+     "correct": false,
+     "latency_s": 1.79,
+     "prompt_tokens": 3863,
+     "output_tokens": 28,
+     "model_calls": 1,
+     "tool_messages": 0,
+     "tool_calls": 0,
+     "cited": [],
+     "unsupported_citations": []
+    },
+    {
+     "id": "H12",
+     "scope": "window",
+     "question": "What happened in the hour after the main gate was left open?",
+     "answer": "In the hour after the main gate was left open at 22:45 [f611], an unrecognised black SUV entered the driveway at 23:10 [f623], two people were spotted at the garage alongside the SUV at 23:12 [f624], those two people were seen tampering with an access point at the garage at 23:16 [f626], and finally the black SUV left through the main gate at 23:25 [f630].",
+     "correct": true,
+     "latency_s": 13.02,
+     "prompt_tokens": 8250,
+     "output_tokens": 148,
+     "model_calls": 2,
+     "tool_messages": 1,
+     "tool_calls": 1,
+     "cited": [
+      611,
+      623,
+      624,
+      626,
+      630
+     ],
+     "unsupported_citations": []
+    },
+    {
+     "id": "Q18",
+     "scope": "unanswerable",
+     "question": "What was the licence plate of the black SUV?",
+     "answer": "Not enough evidence in the footage to answer that. The footage and camera frames [f623], [f624], and [f630] show the black SUV entering, at the garage, and leaving, but the licence plate is not captured or legible in the available data.",
+     "correct": true,
+     "latency_s": 7.57,
+     "prompt_tokens": 8259,
+     "output_tokens": 81,
+     "model_calls": 2,
+     "tool_messages": 1,
+     "tool_calls": 1,
+     "cited": [
+      623,
+      624,
+      630
+     ],
+     "unsupported_citations": []
+    }
+   ]
+  }
+ }
+}

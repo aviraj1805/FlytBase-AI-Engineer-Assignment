@@ -27,7 +27,10 @@ What changed from the first version, in one line each:
 Headline results (offline, scripted day, 10 seeds; `docs/results/eval_scenario_rules.md`): alert precision
 1.00 and recall 1.00 over 20 incidents, detection precision 0.991 and recall 1.00, re-identification F1 1.00.
 These are **development-set** numbers: the parser was built against these captions. The held-out and
-ablation results in section 5 are the more informative ones.
+ablation results in section 5 are the more informative ones, and the live Gemini runs (5.6) show where the LLM
+earns its place: on captions reworded by Gemini the parser's alert F1 drops to 0.769 while the Gemini analyzer
+stays at 1.00; the VLM found 8/8 labelled objects in seven real photos with the expected alert on every one; and
+the hierarchical memory answered as many questions as the whole-video prompt with 8.7x fewer prompt tokens.
 
 ## 2. Approach
 
@@ -163,7 +166,8 @@ from ground-truth entities, not caption words; half the queries are deliberate p
 Hybrid wins overall. TF-IDF fixes spelling variants ("F-150 pickup": 0.36 keyword -> 0.82 hybrid) but it is
 lexical, not semantic: "someone hanging around the entrance late at night" and "break-in at the warehouse"
 score 0 for every offline method because they share no words with "person loitering at the main gate" or
-"forcing the warehouse side door". Those two queries are what Gemini embeddings are for (section 5.6).
+"forcing the warehouse side door". With Gemini embeddings the first is recovered and the hybrid reaches
+nDCG@10 0.889 (section 5.6).
 
 ### 5.4 Context management and Q&A
 
@@ -194,7 +198,7 @@ The held-out score is the honest one: keyword routing does not generalise. Of th
 abstentions ("when did the drone dock after the incident", "which vehicle was parked in the late morning",
 "which zones are on the property") and two are wrong-but-cited ("did the gardener trigger alerts" lists all
 19 alerts; "what happened in the hour after the gate was left open" needs relative-time reasoning). This is
-the gap the LLM agent is meant to fill; see section 5.6.
+the gap the LLM agent fills: the Gemini agent answered both wrong-but-cited questions correctly (section 5.6).
 
 ### 5.5 Scale
 
@@ -219,34 +223,92 @@ latency grow with the number of matching rows (the same intruder appears every s
 re-serialising every past visit on each sighting (ingest fell to 2,470 frames/s), the one-day summary query
 had no indexable lower bound (9 ms), and hybrid search counted every table on each query (66 ms).
 
-### 5.6 Gemini paths
+### 5.6 Gemini results (live API)
 
-**Not run against the live API.** No Gemini API key was available in the development environment, so this
-section has no Gemini numbers, and none are reported anywhere else either. What exists and is verified without
-the network:
+Run on 28 Oct 2026 with a **free-tier key** (20 requests per model per day). That limit shaped what was run:
+`python -m drone_security models` listed 46 models and chose **gemini-3.8-flash** (newest stable Flash;
+`docs/results/gemini_models.json`), but its daily quota was used up by the first, hung VLM run (see below) and the
+model then returned `503 UNAVAILABLE` (overloaded) for the rest of the day. Each result therefore names its model:
+perception on **gemini-3.5-flash**, the Q&A experiment on **gemini-3.5-flash-lite**, retrieval on
+**gemini-embedding-2**. The Q&A experiment uses 6 questions chosen before the run
+(`data/eval/qa_gemini_subset.yaml`) instead of all 32, and two conditions instead of four.
 
-* Model selection from the live model list (`python -m drone_security models`), retries with the server's
-  suggested delay, and token accounting per purpose: `tests/test_gemini.py`.
-* LLM perception (schema-validated output normalised onto the parser vocabulary, 40 captions per request,
-  cached, parser fallback per frame) and the VLM path for real images, with a scoring harness and hand labels
-  for seven Wikimedia Commons photos: `tests/test_gemini.py`, `tests/test_evaluation.py` (fake VLM).
-* The LangChain + Gemini agent loop and the citation check: `tests/test_agent.py` (scripted fake chat model).
-* The schemas are accepted by the installed `google-genai` SDK and the agent builds with
-  `ChatGoogleGenerativeAI`; no request was sent.
+**VLM on seven real photographs** (`vlm_check.md`, gemini-3.5-flash, hand labels in `data/images/manifest.json`):
 
-`python make.py eval-gemini` runs every Gemini experiment and writes `gemini_models.json`, `vlm_check.md`,
-the Gemini rows of `retrieval_eval.md`, `eval_scenario_gemini.md`, `paraphrase_eval.md` and the naive /
-hierarchical / tools-only / summaries conditions of `qa_context_eval.md` and `qa_heldout_eval.md`.
-The questions those runs answer, stated as hypotheses rather than results: do Gemini embeddings recover the
-two paraphrase queries that every offline method misses (5.3); does the LLM analyzer keep alert recall on
-reworded captions where the parser degrades; and does hierarchical memory + tools match the naive prompt's
-accuracy at a fraction of its tokens and beat the offline router on the held-out questions (5.4).
+| | Object recall | Attribute accuracy | Images with false alarms | Expected alert behaviour |
+|---|---|---|---|---|
+| Gemini VLM, structured output | **1.00** (8/8) | 1.00 | 0 / 7 | 7 / 7 |
+| Rule parser on the VLM's caption | 0.857 | 1.00 | 0 / 7 | |
+
+The fence climbers at 02:14 raised INTRUSION, the black SUV at 23:10 raised AFTER_HOURS_VEHICLE, and the fox, parcel,
+traffic, forklift and empty lane raised nothing, exactly as labelled. The VLM read makes and models (Ford F150,
+Hyundai Sonata, Dodge Ram, Cadillac Escalade). Errors worth knowing: it reads lettering as a vehicle make ("Komatsu"
+forklift, "Panus" container truck), and it repeats the zone named in the prompt ("near the main gate") rather than
+inferring it from the image. The parser on the VLM's own caption missed the Escalade (make/model not in its lexicon),
+which is the case for structured VLM output over caption parsing. Mean latency 14.6 s per image (7 requests, 10.9k
+prompt tokens): fine for alerts on sampled frames, not for every video frame.
+
+**Perception on unseen wording** (`paraphrase_eval.md`): gemini-3.5-flash reworded all 85 distinct captions of the
+day (646 frames) keeping the facts, e.g. "Person in a dark hoodie loitering at the main gate" -> "Individual wearing
+a dark hooded sweatshirt lingering near the main gate". Ground truth unchanged.
+
+| Analyzer | Captions | Alert P | Alert R | Alert F1 | Detection P | Detection R | Action accuracy |
+|---|---|---|---|---|---|---|---|
+| Rule parser | original | 1.00 | 1.00 | 1.00 | 0.991 | 1.000 | 0.833 |
+| Rule parser | **reworded** | 0.789 | 0.750 | **0.769** | 0.837 | 0.759 | 0.269 |
+| Gemini LLM (gemini-3.5-flash) | original | 1.00 | 1.00 | 1.00 | 1.000 | 0.981 | 0.936 |
+| Gemini LLM | **reworded** | 1.00 | 1.00 | **1.00** | 0.938 | 0.981 | 0.897 |
+
+This is the clearest result of the project. On wording it was tuned for, the parser is as good as the LLM; on
+wording it has never seen it misses 5 of 20 incidents (three intrusions, the open warehouse door) and raises 4
+false alerts (a rephrased guard without the word "uniform" becomes an after-hours person), while the Gemini analyzer
+keeps every incident and raises none. Cost: 3 batched requests of up to 35 captions per day of footage, thanks to
+caption caching.
+
+**Embeddings in hybrid retrieval** (`retrieval_eval.md`, 22 labelled queries, nDCG@10):
+
+| Method | All | Exact (10) | Paraphrase (11) | Median latency |
+|---|---|---|---|---|
+| Keyword (BM25) | 0.822 | 0.863 | 0.768 | 0.3 ms |
+| Hybrid BM25 + TF-IDF (offline) | 0.846 | 0.969 | 0.734 | 0.8 ms |
+| Gemini embeddings only | 0.685 | 0.618 | 0.789 | 510 ms |
+| **Hybrid BM25 + Gemini** | **0.889** | 0.940 | **0.860** | 558 ms |
+
+Gemini vectors recover the paraphrase every offline method missed ("someone hanging around the entrance late at
+night": 0 -> 1.00 alone, 0.70 hybrid) but fail single-word exact queries on their own ("gardener", "delivery van":
+0.00), which is exactly why the hybrid wins. "Break-in at the warehouse" still scores 0: the system returns the
+open-door frames, which my labels count only for the door, not the intruder, so part of that miss is label strictness.
+The latency is one embedding call per query; the offline hybrid remains the default.
+
+**Context management** (`qa_gemini_subset_eval.md`, gemini-3.5-flash-lite, 6 questions):
+
+| Condition | Correct | Mean prompt tokens / question | Mean latency | Answers with made-up citations |
+|---|---|---|---|---|
+| Offline router | 3 / 6 | 0 | 0 s | 0 |
+| Whole video in the prompt (naive) | 5 / 6 | 46,190 | 12.5 s | 0 |
+| **Hierarchical memory + tools** | **5 / 6** | **5,329** | **7.1 s** | 0 |
+
+Same accuracy at **8.7x fewer prompt tokens** and lower latency, on a day where the naive prompt still fits; at
+200k frames it would not fit at all (section 5.4). Both Gemini conditions answered the two held-out questions the
+offline router failed ("vehicle parked at the warehouse in the late morning", "what happened in the hour after the
+gate was left open") with correct citations; the hierarchical agent answered four questions from its summaries
+alone and called a tool for the other two. Both refused the licence-plate question. Both got "did the gardener
+trigger any alerts?" wrong in the same way: they abstained instead of answering "no", because the memory calls him
+"person in green cap" and absence of an alert is never stated explicitly. Gemini's own token count is about twice
+the 4-characters-per-token estimate used elsewhere in this report (46,082 vs 21,763 for the naive context;
+2,858 vs 1,622 for the hierarchical one), so absolute token figures in 5.4 understate real usage; the ratios hold.
+
+**What the first live run broke** (all fixed, with tests): the SDK has no request timeout by default, so one stalled
+call hung the VLM run for 10+ minutes and its retries used up the 3.8-flash quota; `gemini-embedding-2` merges a list
+of strings into a single vector unless each text is sent as its own `Content`; and retrying a `429` whose
+`retryDelay` is an hour only wastes time, so daily-quota errors now fail fast while burst limits are still retried.
 
 ## 6. Error analysis: what the failures teach
 
 1. **Perception wording is the main risk.** Every development-set error came from wording the lexicon had not
-   seen. The fix is not a bigger lexicon but the LLM backend for unusual captions (`--analyzer gemini`), with
-   the parser kept as the fast, offline fallback.
+   seen, and the reworded-caption test quantifies it: alert F1 1.00 -> 0.769 for the parser, 1.00 -> 1.00 for the
+   Gemini analyzer (5.6). The fix is not a bigger lexicon but the LLM backend for unfamiliar wording
+   (`--analyzer gemini`), with the parser kept as the fast, offline fallback.
 2. **Identity needs strong attributes.** Re-identification is excellent when make/model/clothing are present
    and degrades predictably when they are not (5.2). A plate reader or appearance embeddings from real
    images are the next step; the tracker already exposes a confidence for each match.
@@ -254,18 +316,23 @@ accuracy at a fraction of its tokens and beat the offline router on the held-out
    (a low-battery reminder 16 minutes after the first) and a missed negation, not wrong conditions.
    Persistent conditions now have longer cooldowns (battery 60 min, open gate 4 h).
 4. **Deterministic routing does not generalise** (7/12 held-out). The offline analyst is a safety net that
-   abstains rather than guesses; open-ended Q&A needs the LLM agent.
+   abstains rather than guesses; open-ended Q&A needs the LLM agent, which fixed the router's held-out misses.
 5. **Context is cheap to bound, expensive to ignore.** A naive prompt is linear in footage length; the
-   hierarchy is flat. The open question is answer quality per token, which the Gemini context experiment (section 5.6) measures.
+   hierarchy is flat, and on one day it already matched the naive prompt's accuracy at 8.7x fewer tokens (5.6).
+6. **Absence is hard to prove.** Both LLM conditions abstained on "did the gardener trigger any alerts?" instead of
+   answering "no". Grounded agents need an explicit way to state negative evidence (e.g. a tool that answers
+   "no alert involves entity X") rather than inferring it from silence.
+7. **Live APIs fail in ways fakes do not.** The first live run found a missing request timeout, an embedding
+   model that merges batched inputs, and wasteful retries on daily quotas; none showed up in the fake-client tests.
 
 ## 7. Testing
 
-128 automated tests (`python make.py test`), described in `docs/TESTING.md`: unit tests for the parser, rules
+130 automated tests (`python make.py test`), described in `docs/TESTING.md`: unit tests for the parser, rules
 (every rule, explanations, evidence, cooldown, escalation, correlation, YAML validation), tracker, index,
 retrieval, memory and agent; scenario tests that score against ground truth; and edge cases (duplicates,
 out-of-order and late frames, missing and broken telemetry, malformed records, midnight rollover, empty day,
 the brief's text format). Gemini code paths are tested with fake clients (model selection, retries,
-normalisation, batching, fallbacks).
+daily-quota fail-fast, per-text embeddings, normalisation, batching, fallbacks) and were then run live (5.6).
 
 ## 8. Demo videos
 
@@ -308,5 +375,6 @@ What I reviewed and decided myself, and what I need to be able to defend in an i
 
 AI made it possible to build and measure far more in two days than I could alone. It also produced code that
 looked right and was wrong: the LLM agent crashed on its first tool call, the benchmark exposed quadratic
-work, and the first offline answer to "was the Silverado the same vehicle as the F150?" compared it with
-the wrong car. Each was caught only because the system is measured end to end.
+work, the first offline answer to "was the Silverado the same vehicle as the F150?" compared it with
+the wrong car, and the Gemini client passed every fake-client test yet hung, merged embeddings and burned quota on
+its first live run. Each was caught only because the system is measured end to end, against the real API.

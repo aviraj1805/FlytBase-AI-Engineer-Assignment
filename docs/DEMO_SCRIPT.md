@@ -121,11 +121,14 @@ python make.py test             # show "128 passed" if you want it on screen
 > "These are questions the offline router gets wrong or cannot route. The Gemini agent decides which tool to
 > call, drills down when it needs detail, and still cites frames; the citation check runs after every answer."
 
-### Scene D: results (2:30-3:00), show docs/results/qa_context_eval.md
+### Scene D: results (2:30-3:00), show docs/results/qa_gemini_subset_eval.md and paraphrase_eval.md
 
-> "The context experiment: the same questions answered with the whole video pasted into the prompt, with
-> the hierarchical memory plus tools, and two ablations. The table shows accuracy, tokens per question and
-> made-up citations for each. All numbers come from runs saved in the repo."
+> "Two measured results. Context: the same questions answered with the whole video pasted into the prompt, and
+> with the hierarchical memory plus tools. Both get five of six right, but the hierarchy uses about five
+> thousand tokens per question instead of forty-six thousand, and neither invents a citation. Perception:
+> when Gemini rewords every caption, the rule parser misses a quarter of the incidents, while the Gemini
+> analyzer still catches all twenty. That is why the parser is the fast fallback and the LLM is the
+> robust path. All numbers come from runs saved in the repo."
 
 ---
 

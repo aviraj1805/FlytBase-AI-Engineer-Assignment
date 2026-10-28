@@ -37,7 +37,7 @@ Python 3.10+. Works offline; no API key needed.
 ```bash
 git clone <repo-url> && cd <repo>
 python make.py setup        # creates .venv and installs the package + test deps
-python make.py test         # 128 tests
+python make.py test         # 130 tests
 python make.py run          # process the scripted day: live logs, alerts, summary
 python make.py demo         # the 8-scene walkthrough used for the demo video
 python make.py eval         # offline experiments -> docs/results
@@ -96,10 +96,14 @@ held-out wording, context experiment). The model is chosen by listing what the k
 | Agent context at 200,000 frames | 2,442 tokens (hierarchical) vs 6,862,855 (every frame) | [benchmark.md](docs/results/benchmark.md) |
 | Ingest at 200,000 frames (310 days) | 4,976 frames/s; indexed queries < 1 ms; DB 96.5 MB | same |
 | Real-time budget per frame (parse, track, rules, index) | median 0.19 ms, p99 under 2 ms at 200,000 frames, even on battery | [benchmark_battery.md](docs/results/benchmark_battery.md) |
-| Gemini experiments (VLM on 7 real photos, embeddings, LLM perception, context experiment) | not run: no API key was available during development; `python make.py eval-gemini` produces them | [REPORT 5.6](docs/REPORT.md) |
+| **Gemini VLM on 7 real photos** (gemini-3.5-flash) | object recall 1.00 (8/8), no false alarms, expected alert on 7/7 images | [vlm_check.md](docs/results/vlm_check.md) |
+| **Captions reworded by Gemini** (unseen wording) | alert F1: rule parser 0.769, Gemini analyzer 1.00 | [paraphrase_eval.md](docs/results/paraphrase_eval.md) |
+| **Hybrid search with Gemini embeddings** | nDCG@10 0.889 (best); paraphrase queries 0.860 | [retrieval_eval.md](docs/results/retrieval_eval.md) |
+| **Context: whole video in the prompt vs hierarchical memory + tools** (gemini-3.5-flash-lite, 6 questions) | both 5/6 correct; 46,190 vs 5,329 prompt tokens per question; 0 made-up citations | [qa_gemini_subset_eval.md](docs/results/qa_gemini_subset_eval.md) |
 
-The 1.00 scores are on captions the parser was developed against; the held-out and ablation numbers are
-the ones that say how it generalises. See the report, sections 5-6.
+The 1.00 scores are on captions the parser was developed against; the held-out, ablation and reworded-caption
+numbers are the ones that say how it generalises. The Gemini runs used a free-tier key (20 requests per model per
+day), so each names its model and the Q&A experiment is a 6-question subset. See the report, sections 5-6.
 
 ## Architecture
 
@@ -122,7 +126,7 @@ src/drone_security/
   demo.py, cli.py    demo scenes and the command line
 config/              property.json (zones, hours, known vehicles), rules.yaml
 data/                scenario script + generated day, real images (+ licences), eval sets
-tests/               128 tests
+tests/               130 tests
 ```
 
 Key design decisions (details and alternatives in the report, section 4):

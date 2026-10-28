@@ -1,0 +1,152 @@
+{
+ "provenance": {
+  "generated_at": "2026-10-28T18:31:40",
+  "command": "python -m drone_security eval-paraphrase",
+  "python": "3.10.11",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel"
+ },
+ "seed": 7,
+ "paraphrase_model": "gemini-3.5-flash",
+ "frames_reworded": 646,
+ "frames": 646,
+ "results": {
+  "rules | original captions": {
+   "alert_precision": 1.0,
+   "alert_recall": 1.0,
+   "alert_f1": 1.0,
+   "missed": [],
+   "false_positives": [],
+   "detection_precision": 0.991,
+   "detection_recall": 1.0,
+   "attribute_accuracy": {
+    "color": 1.0,
+    "action": 0.833,
+    "make": 0.979,
+    "model": 0.979
+   },
+   "reid_f1": 1.0,
+   "f150_visits": [
+    2
+   ]
+  },
+  "rules | reworded captions": {
+   "alert_precision": 0.789,
+   "alert_recall": 0.75,
+   "alert_f1": 0.769,
+   "missed": [
+    "GT-03 02:14 INTRUSION: Masked person climbing the back fence",
+    "GT-06 02:16 INTRUSION: Forcing the warehouse side door",
+    "GT-07 02:36 INTRUSION: Intruder climbing back out over the fence",
+    "GT-08 02:18 ACCESS_OPEN: Warehouse side door left open after the break-in",
+    "GT-20 23:16 INTRUSION: Trying the garage door handles"
+   ],
+   "false_positives": [
+    "03:00 AFTER_HOURS_PERSON: Person at back fence during night hours, 03:00.",
+    "03:40 AFTER_HOURS_VEHICLE: Unrecognised Car at drone dock after hours, 03:40.",
+    "04:05 AFTER_HOURS_VEHICLE: Unrecognised Car at drone dock after hours, 04:05.",
+    "05:56 AFTER_HOURS_PERSON: Person at main gate during night hours, 05:56."
+   ],
+   "detection_precision": 0.837,
+   "detection_recall": 0.759,
+   "attribute_accuracy": {
+    "color": 0.986,
+    "action": 0.269,
+    "make": 0.979,
+    "model": 0.979
+   },
+   "reid_f1": 0.999,
+   "f150_visits": [
+    2
+   ]
+  },
+  "gemini | original captions": {
+   "alert_precision": 1.0,
+   "alert_recall": 1.0,
+   "alert_f1": 1.0,
+   "missed": [],
+   "false_positives": [],
+   "detection_precision": 1.0,
+   "detection_recall": 0.981,
+   "attribute_accuracy": {
+    "color": 0.935,
+    "action": 0.936,
+    "make": 0.979,
+    "model": 0.979
+   },
+   "reid_f1": 1.0,
+   "f150_visits": [
+    2
+   ]
+  },
+  "gemini | reworded captions": {
+   "alert_precision": 1.0,
+   "alert_recall": 1.0,
+   "alert_f1": 1.0,
+   "missed": [],
+   "false_positives": [],
+   "detection_precision": 0.938,
+   "detection_recall": 0.981,
+   "attribute_accuracy": {
+    "color": 0.935,
+    "action": 0.897,
+    "make": 0.979,
+    "model": 0.979
+   },
+   "reid_f1": 0.983,
+   "f150_visits": [
+    2
+   ]
+  }
+ },
+ "examples": [
+  {
+   "original": "Person in a dark hoodie loitering at the main gate",
+   "reworded": "Individual wearing a dark hooded sweatshirt lingering near the main gate."
+  },
+  {
+   "original": "Person in dark hoodie still standing at the main gate",
+   "reworded": "Subject clad in a dark hoodie continues standing at the main gate location."
+  },
+  {
+   "original": "Person in dark hoodie walking back and forth at the main gate",
+   "reworded": "Individual in a dark hooded sweater pacing back and forth beside the main gate."
+  },
+  {
+   "original": "Person in dark hoodie leaving the main gate area",
+   "reworded": "Person dressed in a dark hoodie departing the vicinity of the main gate."
+  },
+  {
+   "original": "Main gate shut, no one around",
+   "reworded": "Main gate remains closed, with no personnel present nearby."
+  },
+  {
+   "original": "Driveway clear",
+   "reworded": "Driveway sector is completely clear."
+  },
+  {
+   "original": "Garage area quiet",
+   "reworded": "No activity observed in the garage zone."
+  },
+  {
+   "original": "Loading bay empty",
+   "reworded": "The loading bay area is currently unoccupied."
+  },
+  {
+   "original": "Back fence intact, no one nearby",
+   "reworded": "Rear perimeter fence is undamaged, no individuals in the area."
+  },
+  {
+   "original": "Backyard quiet",
+   "reworded": "Backyard area shows zero activity."
+  },
+  {
+   "original": "Nobody at the front door",
+   "reworded": "No individuals detected at the front door."
+  },
+  {
+   "original": "Empty driveway, no vehicles",
+   "reworded": "Vacant driveway space, zero vehicles present."
+  }
+ ]
+}

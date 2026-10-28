@@ -78,7 +78,10 @@ def run_qa_eval(config: PropertyConfig, *, gemini=None, conditions: Optional[lis
         rows = []
         for q in questions:
             started = time.perf_counter()
-            answer, usage, allowed = answerer(q["q"])
+            try:
+                answer, usage, allowed = answerer(q["q"])
+            except Exception as exc:  # overloaded model, quota: record it as a failed answer, keep going
+                answer, usage, allowed = f"[API error: {type(exc).__name__}: {str(exc)[:120]}]", {"api_error": True}, set()
             latency = time.perf_counter() - started
             citations = check_citations(answer, allowed)
             rows.append({"id": q["id"], "scope": q["scope"], "question": q["q"], "answer": answer,
@@ -141,6 +144,7 @@ def _summarise(rows: list[dict]) -> dict:
         "mean_prompt_tokens": round(statistics.mean(r.get("prompt_tokens", 0) for r in rows)),
         "mean_latency_s": round(statistics.mean(r["latency_s"] for r in rows), 2),
         "answers_with_unsupported_citations": sum(bool(r["unsupported_citations"]) for r in rows),
+        "api_errors": sum(bool(r.get("api_error")) for r in rows),  # counted as wrong answers
         "rows": rows,
     }
 
@@ -166,13 +170,13 @@ def write_qa_report(result: dict, out_dir: Path, name: str = "qa_context_eval") 
         "",
         "## Answers",
         "",
-        "| condition | accuracy | answerable | abstention | whole-day questions | mean prompt tokens | mean latency s | answers with made-up citations |",
-        "|---|---|---|---|---|---|---|---|",
+        "| condition | accuracy | answerable | abstention | whole-day questions | mean prompt tokens | mean latency s | answers with made-up citations | API errors (counted wrong) |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for cond, r in result["results"].items():
         lines.append(f"| {cond} | {r['accuracy']} | {r['answerable_accuracy']} | {r['abstention_accuracy']} | "
                      f"{r['by_scope'].get('whole day', '-')} | {r['mean_prompt_tokens']:,} | {r['mean_latency_s']} | "
-                     f"{r['answers_with_unsupported_citations']} |")
+                     f"{r['answers_with_unsupported_citations']} | {r.get('api_errors', 0)} |")
     lines += ["", "## Per question", "", "| id | question | " + " | ".join(result["results"]) + " |",
               "|---|---|" + "---|" * len(result["results"])]
     conds = list(result["results"])
