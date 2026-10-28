@@ -123,6 +123,8 @@ def cmd_run(args) -> int:
             if args.explain:
                 out(f"         why: {alert.explanation}  evidence: {alert.evidence_frame_ids}", style="dim")
 
+    if args.speed:
+        records = replay(records, args.speed)
     stats = pipeline.run(records, on_result=None if args.quiet else show)
     heading("Run statistics")
     by_sev = ", ".join(f"{k} {v}" for k, v in sorted(stats.alerts_by_severity.items(), key=lambda kv: -Severity[kv[0]]))
@@ -132,7 +134,8 @@ def cmd_run(args) -> int:
     ingest = stats.ingest
     out(f"ingest: {ingest.duplicates} duplicates dropped, {len(ingest.quarantined)} malformed quarantined, "
         f"{ingest.missing_telemetry} without telemetry, {stats.late_frames} late")
-    out(f"{stats.elapsed_s * 1000:.0f} ms total, {stats.fps:,.0f} frames/s; index: {db}")
+    out(f"{stats.elapsed_s * 1000:.0f} ms total, {stats.fps:,.0f} frames/s; per-frame latency p50 "
+        f"{stats.latency_ms(50):.2f} ms, p99 {stats.latency_ms(99):.2f} ms; index: {db}")
     if hasattr(analyzer, "stats"):
         out(f"Gemini analyzer: {analyzer.stats}")
     heading("Video summary")
@@ -372,6 +375,23 @@ def cmd_models(args) -> int:
 
 
 # ----------------------------------------------------------------------------------------- helpers
+def replay(records: list[dict], speed: float):
+    """Yield records with real gaps between their timestamps, divided by `speed` (60 = a minute per second)."""
+    import time
+    from datetime import datetime
+
+    previous = None
+    for record in records:
+        try:
+            at = datetime.strptime(str(record.get("timestamp", ""))[:19], "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            at = None
+        if previous and at and at > previous:
+            time.sleep(min((at - previous).total_seconds() / speed, 2.0))  # never stall more than 2 s
+        previous = at or previous
+        yield record
+
+
 def reset_db(db: Path) -> None:
     for suffix in ("", "-wal", "-shm"):
         Path(f"{db}{suffix}").unlink(missing_ok=True)
@@ -447,6 +467,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--feed", default=str(DEFAULT_FEED), help=".jsonl records or the brief's .txt line format")
     p.add_argument("--analyzer", choices=["rules", "gemini"], default="rules")
     p.add_argument("--gemini-summaries", action="store_true", help="Gemini writes the hour and day summaries")
+    p.add_argument("--speed", type=float, default=0, help="replay as a live feed: 60 = one footage minute per second")
     p.add_argument("--verbose", "-v", action="store_true", help="also print every frame with its telemetry")
     p.add_argument("--explain", action="store_true", help="print each alert's explanation and evidence")
     p.add_argument("--quiet", "-q", action="store_true", help="only print the final statistics")

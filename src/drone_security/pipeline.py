@@ -38,10 +38,18 @@ class RunStats:
     elapsed_s: float = 0.0
     alerts_by_severity: dict[str, int] = field(default_factory=dict)
     ingest: Optional[IngestStats] = None
+    frame_ms: list[float] = field(default_factory=list, repr=False)  # time from frame in to alerts out
 
     @property
     def fps(self) -> float:
         return self.frames / self.elapsed_s if self.elapsed_s else 0.0
+
+    def latency_ms(self, percentile: float) -> float:
+        """Per-frame processing latency at a percentile (50 = median, 99 = worst 1%)."""
+        if not self.frame_ms:
+            return 0.0
+        ordered = sorted(self.frame_ms)
+        return ordered[min(int(len(ordered) * percentile / 100), len(ordered) - 1)]
 
 
 class SecurityPipeline:
@@ -102,7 +110,9 @@ class SecurityPipeline:
         sanitizer = FeedSanitizer(self.config, reorder_window=reorder_window)
         started = time.perf_counter()
         for frame in sanitizer.process(records):
+            frame_started = time.perf_counter()
             result = self.process(frame)
+            stats.frame_ms.append((time.perf_counter() - frame_started) * 1000)
             stats.frames += 1
             stats.detections += len(result.detections)
             stats.logs += len(result.logs)

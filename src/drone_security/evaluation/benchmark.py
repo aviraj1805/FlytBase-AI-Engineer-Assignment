@@ -87,6 +87,8 @@ def _one_size(config: PropertyConfig, n: int, repeats: int) -> dict:
         "generate_s": round(generate_s, 2),
         "ingest_s": round(stats.elapsed_s, 2),
         "ingest_fps": round(stats.fps),
+        "frame_latency_p50_ms": round(stats.latency_ms(50), 3),
+        "frame_latency_p99_ms": round(stats.latency_ms(99), 3),
         "detections": s["detections"],
         "entities": s["entities"],
         "alerts": stats.alerts,
@@ -118,9 +120,10 @@ def write_benchmark_report(result: dict, out_dir: Path) -> Path:
         "",
         "## Ingest and storage",
         "",
-        "| frames | days | ingest s | frames/s | detections | entities | raw rule firings | alerts | DB MB | unique captions |",
-        "|---|---|---|---|---|---|---|---|---|---|",
-        *[f"| {r['frames']:,} | {r['days']} | {r['ingest_s']} | {r['ingest_fps']:,} | {r['detections']:,} | {r['entities']:,} | "
+        "| frames | days | ingest s | frames/s | per-frame p50 / p99 ms | detections | entities | raw rule firings | alerts | DB MB | unique captions |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
+        *[f"| {r['frames']:,} | {r['days']} | {r['ingest_s']} | {r['ingest_fps']:,} | "
+          f"{r['frame_latency_p50_ms']} / {r['frame_latency_p99_ms']} | {r['detections']:,} | {r['entities']:,} | "
           f"{r['raw_rule_firings']:,} | {r['alerts']:,} | {r['db_mb']} | {r['unique_captions']:,} |" for r in rows],
         "",
         f"## Query latency, median / p95 in ms ({result['repeats']} repeats)",
