@@ -1,168 +1,150 @@
 # Drone Security Analyst Agent
 
-A prototype security analyst for a **docked drone that patrols one property every day**. It ingests drone telemetry and video frames, turns each frame into structured detections, tracks who and what comes and goes across the day, raises real-time security and flight-safety alerts, indexes every frame for search, and answers operator questions through a LangChain + Claude agent.
+A security analyst for a **docked drone that patrols one property every day**. It reads the drone's
+telemetry and video frames (simulated as text descriptions, or real images through a VLM), turns each frame
+into structured objects, tracks who and what comes and goes, raises **explained real-time alerts**, indexes
+every frame for search, and answers questions through an **agent that cites the frames it relies on**.
 
 ```
-[02:14] ALERT  CRITICAL Masked person in black jacket climbing with bolt cutters at back fence, 02:14.
-[12:00] LOG    Blue Ford F150 spotted at garage, 12:00.
-[12:00] ALERT  LOW      Blue Ford F150 entered twice today (09:14, 12:00), 12:00.
+[02:14] ALERT  CRITICAL Masked person in black jacket climbing at back fence, 02:14.
+        why: Break-in behaviour: Masked person in black jacket detected at the back fence (frame 67);
+             the caption describes climbing.   evidence frames: [67]
+[16:45] ALERT  LOW      Blue Ford F150 entered twice today (09:14, 16:45), 16:45.
 
 you> How many times did the blue Ford F150 enter today?
-Blue Ford F150 (V-002) made 3 visits with 7 sightings: 09:14-09:40 (main gate, garage),
-12:00-12:20 (garage, main gate), 16:45-17:00 (main gate, garage).
+Blue Ford F150 (V-002, re-ID confidence 1.00) made 2 visits with 10 sightings:
+09:14-09:42 (main gate, garage) [f256]; 16:45-17:10 (main gate, garage) [f454].
 you> When did it leave?
-Blue Ford F150 was seen leaving at 09:40, 12:20. After its 16:45 arrival it was last seen
-at 17:00 at the garage (no exit observed).
+Blue Ford F150 was seen leaving at 09:42 [f270], 17:10 [f466].
+you> What was the licence plate of the black SUV?
+Not enough evidence in the footage to answer that. The frame descriptions never record licence plates.
 ```
 
-| | |
+| Document | |
 |---|---|
-| **Feature spec** | [docs/FEATURE_SPEC.md](docs/FEATURE_SPEC.md): value to property owners and the key requirements |
-| **Architecture** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): system diagram, per-frame sequence, data model, design decisions |
-| **Testing** | [docs/TESTING.md](docs/TESTING.md): 87 automated tests, scenarios, benchmark results |
-| **Report** | [docs/REPORT.md](docs/REPORT.md): approach, assumptions, tool choices, results, future work |
-| **Demo videos** | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md): what each recording shows |
-
----
-
-## What it does
-
-| Requirement | How it is met |
-|---|---|
-| Process telemetry + video frames | Simulated feed (`data/scenarios/demo_day.json`: a scripted 24 h patrol with GPS, altitude, battery, wind) **and** real footage via VLM captioning (`video` command) |
-| Identify objects/events, log them with context | Caption → structured detections (category, label, colour, make/model, clothing, carried items, action, zone) → **entity tracker** that re-identifies the same truck or person across frames and counts visits |
-| Real-time alerts from predefined rules | 12 rules (8 security, 4 flight-safety) with severities, recommended actions, **cooldown de-duplication** and **alert correlation** |
-| Frame-by-frame indexing | SQLite + **FTS5**: every frame with telemetry, detections, entities, logs and alerts; query by time, object, zone, entity or free text |
-| Agent | LangChain `create_agent` + Claude with 9 retrieval tools and **budgeted working memory**; deterministic offline analyst when no API key is set |
-| Bonus: video summary | One-sentence summary + highlights (`summary`), optional Claude-written briefing |
-| Bonus: follow-up questions | `chat`: multi-turn Q&A with conversation memory ("when did *it* leave?") |
+| [docs/REPORT.md](docs/REPORT.md) / [REPORT.pdf](docs/REPORT.pdf) | Approach, assumptions, design choices, all results, error analysis, how AI tools helped |
+| [docs/FEATURE_SPEC.md](docs/FEATURE_SPEC.md) | Value and the three key requirements with acceptance criteria |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, data model, diagrams ([docs/diagrams](docs/diagrams)) |
+| [docs/TESTING.md](docs/TESTING.md) | Test strategy, cases, scenarios, how to reproduce, latest results |
+| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Scene-by-scene script for the demo video |
+| [docs/results/](docs/results) | Raw outputs of every experiment (JSON + Markdown + plots) |
+| [docs/AUDIT.md](docs/AUDIT.md) | Audit of the first version and the upgrade plan |
 
 ## Quick start
 
-Requires Python 3.10+. **The core runs on the standard library alone**, so you can try it before installing anything:
+Python 3.10+. Works offline; no API key needed.
 
 ```bash
-git clone https://github.com/aviraj1805/FlytBase-AI-Engineer-Assignment.git
-cd FlytBase-AI-Engineer-Assignment
-
-python -m drone_security run                 # process the demo day: live logs + alerts, builds data/runs/latest.db
-python -m drone_security chat                # ask questions about the footage
+git clone <repo-url> && cd <repo>
+python make.py setup        # creates .venv and installs the package + test deps
+python make.py test         # 128 tests
+python make.py run          # process the scripted day: live logs, alerts, summary
+python make.py demo         # the 8-scene walkthrough used for the demo video
+python make.py eval         # offline experiments -> docs/results
+python make.py benchmark    # 10k / 50k / 100k / 200k frames -> docs/results
 ```
 
-Full setup (LLM agent, Claude perception, tests):
+`make <target>` does the same on Linux/macOS (the Makefile calls `make.py`). After `setup`, the CLI is
+`python -m drone_security <command>` with `src` on the path (or `.venv` activated):
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate                    # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-pip install -r requirements-vlm.txt          # optional: real video + local BLIP captioning
-
-export ANTHROPIC_API_KEY=sk-ant-...          # Windows PowerShell: $env:ANTHROPIC_API_KEY="sk-ant-..."
-python -m pytest                             # 87 tests, ~3 s, no network needed
+python -m drone_security query --label truck                  # "show all truck events"
+python -m drone_security query --text "person climbing the fence" --from 00:00 --to 06:00
+python -m drone_security alerts --min-severity HIGH --explain
+python -m drone_security ask "What happened between 23:00 and 23:30?"
+python -m drone_security chat                                 # follow-up questions keep context
+python -m drone_security summary                              # one sentence + daily briefing
+python -m drone_security run --feed data/scenarios/sample_frames.txt   # the brief's text format
 ```
 
-Without `ANTHROPIC_API_KEY` every command still works: the agent falls back to the offline analyst and perception uses the rule-based parser. With a key, `ask`/`chat` use the Claude agent automatically.
+### Gemini (optional)
 
-## Commands
+Put the key in an environment variable or a gitignored `.env` file in the repo root:
 
-```bash
-python -m drone_security run [--speed 60] [--verbose] [--analyzer claude] [--scenario FILE]
-python -m drone_security query --label truck                       # "show all truck events"
-python -m drone_security query --category person --zone main_gate --from 00:00 --to 06:00
-python -m drone_security query --text "masked fence"               # BM25 full-text search
-python -m drone_security alerts --min-severity HIGH
-python -m drone_security ask "What objects were in the video?"
-python -m drone_security chat                                      # multi-turn, follow-ups
-python -m drone_security summary [--llm]                           # 1-sentence summary + recommendations
-python -m drone_security context --budget 3000                     # the agent's working memory
-python -m drone_security video clip.mp4 --captioner claude --zone main_gate --every 2
-python -m drone_security benchmark --frames 100000                 # scalability test
+```
+GEMINI_API_KEY=your-key
 ```
 
-- `--speed 60` replays the feed in real time at 60x (one footage minute per second); `--verbose` also prints every frame with its telemetry.
-- `--analyzer claude` uses Claude structured outputs instead of the rule parser for frame analysis.
-- Scenarios can also be plain text in the brief's format: `Time: 00:01, Location: Gate, Frame 1: Person loitering at gate` (`.txt` file).
+With a key, the same commands use Gemini where it helps: `ask`/`chat` use the LangChain + Gemini agent,
+`run --analyzer gemini` uses the LLM perception backend, `summary --llm` writes the briefing with Gemini, and
+`python make.py eval-gemini` runs the Gemini experiments (model listing, VLM on real images, embeddings,
+held-out wording, context experiment). The model is chosen by listing what the key can access; set
+`GEMINI_MODEL` to override. Without a key, or if a call fails, everything falls back to the offline path.
 
-## Architecture in one picture
+## What it does (mapped to the assignment)
 
-```mermaid
-flowchart LR
-    subgraph Ingest
-        SIM[Simulator<br/>captions + telemetry] --> F[Frame]
-        VID[Video / images] --> VLM[VLM captioner<br/>Claude vision / BLIP] --> F
-    end
-    F --> AN[Frame analyzer<br/>rule parser / Claude]
-    AN --> TR[Entity tracker<br/>re-ID, visits, dwell]
-    TR --> LOG[Event logger]
-    TR --> RE[Rule engine<br/>12 rules, cooldown, correlation]
-    LOG --> IDX[(Frame index<br/>SQLite + FTS5)]
-    RE --> IDX
-    RE --> AL[Real-time alerts]
-    F --> IDX
-    TR --> CTX[Context manager<br/>hourly digests, budget]
-    CTX --> AG[Analyst agent<br/>LangChain + Claude]
-    IDX -- 9 retrieval tools --> AG
-    AG --> OP((Operator))
-    AL --> OP
-```
+| Requirement | Implementation |
+|---|---|
+| Process telemetry + frames | Seeded scenario generator ([day_script.yaml](data/scenarios/day_script.yaml)): 646 frames with GPS, altitude, battery, wind, HDOP; robust ingest (validation, de-duplication, reorder buffer, missing telemetry); the brief's text format; real images via the Gemini VLM |
+| Identify and log objects/events | Pluggable perception: lexicon parser (offline), Gemini LLM, Gemini VLM, all returning the same structured detections (category, label, colour, make, model, clothing, action, zone, confidence); re-identification with confidence; event log ("Blue Ford F150 spotted at garage, 12:00.") |
+| Real-time alerts from predefined rules | 14 declarative rules in [config/rules.yaml](config/rules.yaml): intrusion, loitering (caption or measured dwell), restricted zone, after-hours person/vehicle, repeat vehicle, unattended object, gate/door open, battery, geofence, GPS drift, altitude, wind. Each alert: severity, rule id, time, evidence frame ids, explanation, recommended action; cooldown + correlation |
+| Frame-by-frame index | SQLite: frames, detections, entities, events, alerts, summaries; indexes on time, object, zone, entity; FTS5 + caption vectors with hybrid (BM25 + vector) search |
+| Bonus: summary + Q&A | One-sentence summary, daily briefing, agent with five tools (`query_frames`, `entity_history`, `list_alerts`, `summarize_window`, `drone_status`), frame citations checked, "not enough evidence" instead of guessing |
 
-Details, sequence diagram, data model and the reasoning behind each choice: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Results (all from runs in this repo; raw data in docs/results)
 
-## Key design decisions
-
-1. **Language-first pipeline.** Every frame becomes a caption first (simulated, or from a VLM), and everything downstream works on captions + telemetry. Simulated and real footage share one code path, and the VLM can be swapped (Claude vision ↔ BLIP) without touching tracking, rules or indexing.
-2. **Deterministic core, LLM at the edges.** Detection parsing, tracking, rules and indexing are deterministic and run at ~3,000+ frames/s on a laptop with no network, which is what a dock's edge computer needs for real-time alerts. Claude is used where language understanding pays off: messy captions, image captioning, summaries and open-ended questions. Each LLM component has a deterministic fallback, so a network or API failure degrades answers but never stops alerting.
-3. **Identity over boxes.** A docked drone's value is in *what repeats*: "the same truck came back three times", "the same person has been at the gate for six minutes". The tracker re-identifies entities by appearance signature and segments visits by observed enter/exit behaviour, because a time gap alone is unreliable with sparse patrol sampling (a bug found and fixed during development, see the report).
-4. **Alerts that stay actionable.** Cooldowns suppress repeats (10 on the demo day; ~49k across 100k random frames), correlation folds overlapping rules into one alert per entity per frame, every alert carries a recommended action, and whitelists (the property manager's Camry, the yellow forklift) and uniformed staff never alert.
-5. **Two-tier agent memory.** The prompt gets a character-budgeted working memory (alerts, key entities, hourly digests, latest frames); the agent reaches everything else through tools over the index. Context stays bounded however long the footage is.
-6. **SQLite + FTS5 for the index.** It is embedded and serverless, ships with Python, handles 100k frames in 80 MB with sub-millisecond structured queries, and its schema maps directly to Postgres/pgvector for a multi-site cloud deployment.
-
-## AI tools used and their impact
-
-This project was built with **Claude Code (Claude Opus 5.5)** as the primary development tool, working from the assignment brief:
-
-| Stage | What the AI tool did | Human review / outcome |
+| What | Result | Source |
 |---|---|---|
-| Design | Proposed the language-first pipeline, two-tier agent memory and SQLite/FTS5 index; drafted the architecture diagrams | Architecture reviewed against the requirements; edge/offline constraint kept as a driver |
-| Generated components | **Caption lexicon + parser**, **the 12 alert rules** (severities, messages, recommended actions), the simulator and the demo-day scenario, the agent tools and prompts | Rules and thresholds reviewed and moved into `config/property.json` |
-| Debugging | Smoke runs exposed real bugs that were then fixed: visit counting ("entered twice" fired when the truck *left*), negation across lists ("no vehicles or people"), a correlated alert re-firing on the next frame, colour bleeding between objects, the drone detecting itself in "drone docked" captions | Each fix is pinned by a regression test |
-| API correctness | Checked the Anthropic SDK and LangChain source on GitHub to confirm current signatures (`beta.messages.parse` with `output_format` + `fallbacks`, `ChatAnthropic(effort=...)`, `create_agent(system_prompt=...)`) rather than relying on memory | Avoided two stale patterns (effort via `model_kwargs` is now rejected; forced `tool_choice` returns 400 on Opus 5.5) |
-| QA | Generated the 87-test suite from the spec (sample outputs, midnight vs noon alerts, cooldowns, persistence, scalability) | All tests pass in ~3 s |
-| Docs | Drafted README, spec, architecture, testing notes, report and demo script | |
+| Alerts vs ground truth (20 incidents, 10 seeds, development captions) | precision 1.00, recall 1.00 | [eval_scenario_rules.md](docs/results/eval_scenario_rules.md) |
+| Detections / re-identification (same runs) | P 0.991 / R 1.00; re-ID F1 1.00 | same |
+| Re-ID with 25% of identity attributes dropped | F1 0.917 (this version) vs 0.430 (v1 matcher) | [ablation.md](docs/results/ablation.md) |
+| Noise control | 19 alerts/day instead of 67.4 raw, same recall | same |
+| Retrieval, 22 labelled queries | nDCG@10: hybrid 0.846, keyword 0.822, TF-IDF 0.768 | [retrieval_eval.md](docs/results/retrieval_eval.md) |
+| Offline Q&A, held-out questions | 7/12 correct, 0 made-up citations (20/20 on the tuned dev set) | [qa_heldout_eval.md](docs/results/qa_heldout_eval.md) |
+| Agent context at 200,000 frames | 2,442 tokens (hierarchical) vs 6,862,855 (every frame) | [benchmark.md](docs/results/benchmark.md) |
+| Ingest at 200,000 frames (310 days) | 4,976 frames/s; indexed queries < 1 ms; DB 96.5 MB | same |
+| Gemini experiments | GEMINI_README_ROW | |
 
-Impact: the full prototype (about 3,700 lines of Python, 740 lines of tests, and the docs) was built in one working session. The most valuable part was not code generation itself but the fast loop of *generate → run the demo → read the output → fix*: most design improvements came from reading real pipeline output.
+The 1.00 scores are on captions the parser was developed against; the held-out, ablation and paraphrase
+numbers are the ones that say how it generalises. See the report, sections 5-6.
 
-## Claude API configuration
+## Architecture
 
-- Model: `claude-opus-5-5` (override with `DSA_MODEL`). Effort is set explicitly: `low` for per-frame extraction and captions, `medium` for the agent and briefings.
-- **Server-side refusal fallbacks are enabled** (`fallbacks="default"`, beta `server-side-fallback-2026-07-01`): if a safety classifier declines a request (security footage mentioning break-ins can occasionally trip one), the API retries on Anthropic's recommended fallback model instead of failing. Remove `fallbacks`/`betas` in `drone_security/llm.py` and `agent/langchain_agent.py` to opt out.
-- Structured outputs (`client.beta.messages.parse` + Pydantic) for frame analysis, so there is no JSON parsing to fail.
-
-## Project layout
+![architecture](docs/diagrams/architecture.png)
 
 ```
-drone_security/
-  models.py           Telemetry, Frame, Detection, Alert, EventLog
-  config.py           property profile: zones (GPS), night/business hours, whitelist, thresholds
-  simulator.py        scenario loader, telemetry synthesizer, background patrol, random load generator
-  perception/         rule_analyzer.py (default), llm_analyzer.py (Claude), vlm.py (Claude vision / BLIP), lexicon.py
-  tracking.py         entity re-identification, visits, dwell time
-  rules/              engine.py (cooldown, correlation), builtin.py (12 rules)
-  indexing/           frame_index.py: SQLite + FTS5 frame-by-frame index
-  context.py          working memory: hourly digests, budgeted rendering
-  analysis.py         video summary + prioritised recommendations
-  agent/              tools.py (9 tools), langchain_agent.py, offline.py, analyst.py (facade + fallback)
-  video.py            real footage: frame sampling + VLM captioning
-  llm.py              Anthropic SDK wrapper (model, effort, fallbacks, structured outputs)
-  cli.py              command-line interface
-config/property.json  the monitored property
-data/scenarios/       demo_day.json (scripted 24 h), sample_frames.txt (brief's text format)
-tests/                87 tests
-docs/                 spec, architecture, testing, report, demo script
+src/drone_security/
+  scenario.py        seeded day generator -> frames.jsonl + ground_truth.json
+  ingest.py          validation, de-duplication, reorder buffer, text format
+  perception/        rule parser + lexicon; Gemini LLM and VLM analyzers (same interface)
+  tracking.py        re-identification with confidence, visits, dwell, evidence frames
+  rules/engine.py    declarative rule engine (config/rules.yaml), cooldown, correlation
+  indexing/          SQLite + FTS5 frame index
+  retrieval.py       hybrid search: BM25 + TF-IDF / Gemini embeddings, reciprocal-rank fusion
+  memory.py          hierarchical summaries (10-minute -> hour -> day), prompt rendering
+  agent/             5 tools, offline router, LangChain + Gemini agent, citation check
+  analysis.py        one-sentence summary, daily briefing, recommendations
+  gemini.py          key handling, model selection, retries, token accounting
+  evaluation/        ground-truth scoring, retrieval, Q&A/context, VLM, ablations, benchmark
+  demo.py, cli.py    demo scenes and the command line
+config/              property.json (zones, hours, known vehicles), rules.yaml
+data/                scenario script + generated day, real images (+ licences), eval sets
+tests/               128 tests
 ```
+
+Key design decisions (details and alternatives in the report, section 4):
+
+* **Deterministic core, LLM at the edges.** Alerts never wait on the network; Gemini handles unusual wording,
+  images and open questions, each with an offline fallback.
+* **Rules as data.** Conditions explain themselves, so an alert's explanation is exactly the checks that passed.
+* **SQLite + FTS5.** Embedded, zero-ops, runs on the dock; sub-millisecond indexed queries at 200k frames.
+* **Hierarchical memory + tools** instead of pasting the video into the prompt: bounded context, drill-down on demand.
+* **Measure against ground truth** that the system never sees.
+
+## How AI tools were used
+
+This project was built with **Claude Code** (Anthropic) working from the assignment text: it audited the first
+version, planned the upgrade, wrote the code, tests, experiments and documents, ran every command, and fixed
+what the measurements exposed. **Gemini** is part of the product (perception, Q&A, embeddings). What I
+reviewed and own, especially the ground-truth design, thresholds, and the honesty of the reported numbers, is
+listed in the report, section 10.
 
 ## Limitations
 
-- The demo runs on **simulated captions**; the VLM path (`video`) is implemented but caption quality depends on footage resolution and drone altitude.
-- Re-identification uses appearance attributes (colour, make/model, clothing). Two identical blue F150s would merge; a production system would add licence-plate OCR and visual embeddings.
-- Single drone, single property, single process. The [architecture doc](docs/ARCHITECTURE.md#scaling-beyond-the-prototype) describes the multi-site path.
+* The main dataset is a scripted day; the perception numbers on it are optimistic (development set).
+* Identity relies on appearance attributes from captions: no plates, no faces. A vague description of a
+  returning vehicle is deliberately not matched (precision over recall), so some repeat visits are missed.
+* The offline Q&A router is keyword-based and generalises poorly (7/12 held-out); open-ended questions need
+  the Gemini agent.
+* Q&A grading is regex-based on small question sets.
+* No live video decoding, notification delivery or UI; the CLI is the interface.

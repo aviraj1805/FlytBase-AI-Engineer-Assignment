@@ -44,6 +44,8 @@ records -> ingest -> perception -> tracker -> rule engine -> alerts (real time)
                  5 tools -> LangChain agent (Gemini) or offline router -> citation check
 ```
 
+![Architecture](diagrams/architecture.png)
+
 Diagrams: `docs/diagrams/architecture.png`, `data_flow.png`, `agent_sequence.png` (Mermaid sources next to them).
 
 **Language as the contract.** The brief simulates video as text ("Frame 1: Blue truck at gate"). I kept
@@ -174,6 +176,8 @@ score 0 for every offline method because they share no words with "person loiter
 | 10,000 frames (16 days) | 2,376 | 339,316 | 143x |
 | 100,000 frames (155 days) | 2,678 | 3,416,763 | 1,276x |
 | 200,000 frames (310 days) | 2,442 | 6,862,855 | 2,810x |
+
+![Context size vs footage length](results/benchmark_context.png)
 
 (Token counts estimated at 4 characters per token.) The naive prompt passes a 1M-token context window at
 ~30k frames, about seven weeks of patrols; the hierarchical memory stays flat because older days collapse to

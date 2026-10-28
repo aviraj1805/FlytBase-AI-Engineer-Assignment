@@ -1,80 +1,100 @@
-# Testing and validation
+# Testing
 
-```bash
-python -m pytest                 # 87 tests in ~2 s; no network, no API key
-python -m pytest -k rules -v     # one area, verbose
-python -m drone_security benchmark --frames 100000
-```
-
-84 tests need only the standard library (+ Pydantic for the LLM-component tests). The 3 LangChain wiring tests run when `requirements.txt` is installed and are skipped otherwise.
+Two layers: **automated tests** (`python make.py test`, 128 tests, about 1 minute, no network) check that
+each component does what it claims, and **experiments** (`python make.py eval`, `benchmark`, `eval-gemini`)
+measure how well the whole system works against ground truth. Experiments write their raw output to
+`docs/results/`, so every number in the README and report can be traced to a file and a command.
 
 ## Strategy
 
-| Layer | What is verified | How |
+| Level | What it proves | Where |
 |---|---|---|
-| Unit | Caption parsing, re-identification, visit/dwell logic, each rule, index queries | Hand-written frames with exact expected outputs |
-| Scenario (end-to-end) | The scripted 24-hour demo day reproduces the brief's sample outputs and a fixed alert profile | `demo_run` fixture runs the full pipeline once per module |
-| Agent | Question routing, time windows, follow-ups, LLM-failure fallback, LangChain tool wiring | Offline analyst on the demo index; scripted fake chat model for LangChain |
-| LLM components | Schema normalisation, caching, error fallback | Stub client (no network) |
-| Scalability | Throughput and query latency under synthetic load; alert noise stays bounded | 5,000-frame test in CI; `benchmark` command for 100k+ |
+| Unit | Parser, rules, tracker, index, retrieval, memory, tools behave as specified, including failure paths | `tests/test_perception.py`, `test_rules.py`, `test_tracking.py`, `test_index.py`, `test_retrieval_memory.py`, `test_agent.py` |
+| Edge cases | Messy feeds never crash the pipeline or produce wrong alerts | `tests/test_ingest_edge_cases.py` |
+| Scenario (ground truth) | The scripted day is alerted correctly; benign traps stay silent; the F150 is one entity with two visits and the Silverado is separate | `tests/test_scenario.py` |
+| LLM integration (no network) | Gemini model selection, key handling, retries, output normalisation, batching, caching, fallbacks, the LangChain tool loop and citation checks, using fake clients | `tests/test_gemini.py`, `tests/test_agent.py` |
+| Measurement code | Grading, ranking metrics, VLM scoring, ablations, paraphrase experiment, benchmark | `tests/test_evaluation.py` |
+| Experiments | Precision/recall/F1, retrieval quality, Q&A accuracy and context size, robustness, scale | `src/drone_security/evaluation/`, results in `docs/results/` |
 
-LLM components are tested with stubs, so the suite is deterministic and free to run. Live behaviour is checked manually with `run --analyzer claude`, `ask` and `chat` when an API key is available.
+Principles: the pipeline under test never reads the ground truth; tests build frames through the same ingest
+path as real feeds (`make_frame` in `tests/conftest.py`); LLM code is tested with fakes so the suite is
+deterministic and free, and the live Gemini behaviour is measured separately by `make eval-gemini`.
 
-## Test inventory
+## Test cases (by file)
 
 | File | Tests | Highlights |
 |---|---|---|
-| `test_perception.py` | 17 | "Blue Ford F150 parked at garage" → vehicle/truck/blue/Ford/F150/garage; F-150 spelling variants; multi-object captions; negations ("no vehicles or people"); carried items attach to the carrier; open gate/door; counts; a clock time "23:10" is not a count; colour does not bleed between objects |
-| `test_tracking.py` | 8 | Same truck = one entity; exit → return = 2 visits; sparse sightings without an exit = 1 visit; dwell accumulates only while continuously observed; different clothing = different people |
-| `test_rules.py` | 18 | **Alert at midnight, not at noon** for the same person at the gate; "Person loitering at main gate, 00:01."; dwell-based loitering after 6 min; climbing = CRITICAL; restricted zone after hours; **"Blue Ford F150 entered twice today (09:14, 12:00)"**; whitelisted Camry silent at night; gate open after hours only; battery low → critical escalation; geofence / altitude / wind; cooldown then re-alert after the window; correlation folds overlapping rules; every alert has a recommended action |
-| `test_index.py` | 11 | Every frame indexed with telemetry; **"show all truck events"** = 7 rows; time-range, zone and case-insensitive make/model queries; full-text "truck" finds an F150 caption via enrichment tags; AND→OR fallback; severity/time alert filters; nearest telemetry; entity visits; persistence to disk; re-indexing replaces rows |
-| `test_pipeline.py` | 8 | Brief's sample outputs on the demo day; alert profile `{CRITICAL 4, HIGH 4, MEDIUM 7, LOW 2}` with suppressions > 0; known vehicle logged with owner but never alerted; parked truck logged once per visit; quiet frames produce no detections; the brief's text format (`Time: 00:01, Location: Gate, Frame 1: ...`) works end to end |
-| `test_agent.py` | 11 | "What objects were in the video?"; "Show all truck events"; visit count + **pronoun follow-up** ("When did it leave?"); night filter; time-window alerts; "What happened at 02:15?" → timeline; drone battery at 03:34; P1 < P2 < P3 ordering; one-sentence summary; free-text fallback; **LLM failure degrades to the offline answer** |
-| `test_context.py` | 5 | Hourly digests persisted; budget respected with priority sections kept; larger budget → more history; context rebuilt from the database matches the live one; a failing LLM summarizer falls back to the template |
-| `test_llm_components.py` | 4 | Structured output normalised (Truck/Blue/ford/F-150 → truck/blue/Ford/F150); cache hit on repeated captions; invalid zone → telemetry zone; API error → rule parser |
-| `test_langchain_agent.py` | 3 | All 9 tools exposed with descriptions; tool executed and result fed back; history kept across turns |
-| `test_scalability.py` | 2 | 5,000 frames > 300 frames/s with every query < 250 ms (loose CI bounds); cooldown absorbs > 50 % of repeat alerts under random load |
+| test_perception.py | 17 | colour/make/model variants ("F-150", "F 150"), clothing, masked intruders with tools, multiple objects per caption, negation before and after the noun, carried items attach to the person, open doors/gates, counts, clock times not read as counts |
+| test_rules.py | 27 | the rules file loads; invalid rules rejected with a clear message; every rule fires with the expected explanation and evidence frames; day vs night severity; whitelists (uniform, known vehicle); unattended object needs time and nobody nearby; GPS drift by HDOP and by impossible jump; geofence threshold read from config; cooldown, escalation, correlation; no telemetry -> no drone alerts but security rules still run |
+| test_tracking.py | 13 | same vehicle = one entity; vague sighting soon after joins; vague sighting after the vehicle left does not; full description after a gap = return visit; conflicting make keeps two blue pickups apart; ambiguous match lowers confidence; clothing colour separates people; groups vs individuals; static objects; dwell resets; evidence frames; re-ID horizon |
+| test_ingest_edge_cases.py | 10 | malformed records quarantined with reasons; broken telemetry dropped, frame kept; missing telemetry; duplicates (same id or same content); out-of-order frames reordered; frames later than the buffer indexed but not tracked; **midnight rollover** (dwell continues across midnight, daily visit counts reset); **empty day**; the brief's text format |
+| test_scenario.py | 9 | determinism per seed; frames carry no labels and truth is written separately; scripted events present; simulated battery crosses thresholds inside the truth windows; multi-day stream; **alerts match ground truth (P = R = 1.0, seed 7)**; F150 one entity with two visits, no merges; benign situations raise nothing; scoring catches a wrong zone |
+| test_index.py | 9 | every frame indexed with telemetry; "show all truck events"; time range, zone, make/model, entity queries; full text via enrichment tags; alerts store explanation and evidence; entity visits; telemetry near a time and extremes; persistence; re-indexing replaces detections |
+| test_retrieval_memory.py | 8 | TF-IDF matches spelling variants; RRF; hybrid vs keyword; filters; summaries at every level with citations; hour summary cites its alerts; context within budget and far smaller than the whole video; live and rebuilt memory agree |
+| test_agent.py | 14 | inventory, truck events, visit count + pronoun follow-up, Silverado vs F150, alert questions, time windows, drone status, briefing and summary, **abstention** on unanswerable questions, every offline citation points at a retrieved frame, exactly five tools, LangChain loop with a scripted fake model, made-up citations flagged, LLM failure degrades to the offline answer |
+| test_gemini.py | 11 | newest stable Flash model chosen from a listed set; override; key from `.env`; offline flag wins; 429 retried; output normalised to the parser vocabulary; captions batched and cached; API failure falls back to the parser; VLM returns caption + objects; usage accounting; real client needs a key |
+| test_evaluation.py | 10 | regex grading, ranking metrics, ground-truth relevance, offline Q&A never cites unseen frames, VLM check scoring with a fake VLM, Gemini summarizer wiring, attribute dropout, v1 tracker baseline, paraphrase experiment, benchmark smoke |
 
-## Scenario coverage: the demo day
+## Scenarios
 
-`data/scenarios/demo_day.json` is a scripted 24-hour patrol (41 scripted frames + 26 background patrol frames = 67) covering dynamic inputs and emergency responses:
+The scripted day (`data/scenarios/day_script.yaml`, seed 7 for the demo) contains 18 episodes:
 
-| Time | Situation | Expected response | Result |
-|---|---|---|---|
-| 00:01–00:09 | Person in dark hoodie at main gate, 5 frames | HIGH loitering alert at 00:01; HIGH dwell alert at 00:07 ("for 6 min"); repeats suppressed | ✅ |
-| 02:14–02:20 | Masked intruder climbs back fence, runs to warehouse, tampers with door, door left ajar | CRITICAL ×3 (climbing, running while masked at night, tampering), MEDIUM door open | ✅ |
-| 03:10 | Drone drifts 379 m from dock | HIGH geofence | ✅ |
-| 03:30 / 03:34 | Battery 22 % → 14 % | MEDIUM → HIGH "return to dock now" | ✅ |
-| 04:50 | Property manager's white Camry at night | Logged "(known: Property manager)", no alert | ✅ |
-| 07:55 | Uniformed guard at gate | Logged, no alert | ✅ |
-| 09:14–17:00 | Blue F150: enters, parks, leaves; returns 12:00; returns 16:45 | 3 visits; LOW "entered twice today (09:14, 12:00)" then "3 times" | ✅ |
-| 10:05 | Courier + package + idling van | 3 detections, logs, no alert (daytime) | ✅ |
-| 13:00 / 15:10 | Drone at 8 m; wind 12.4 m/s | MEDIUM altitude; MEDIUM wind | ✅ |
-| 22:45 | Main gate left open | MEDIUM access-open | ✅ |
-| 23:10–23:25 | Black SUV, headlights off; 2 people try garage door handles | MEDIUM unknown vehicle; MEDIUM night presence; CRITICAL tampering | ✅ |
-| Background | Quiet patrol frames every 30 min | No detections, no security alerts | ✅ |
-
-## Benchmark results
-
-Laptop (Windows 11, Python 3.10, single process), `python -m drone_security benchmark`:
-
-| Frames | Pipeline throughput | DB size | Truck events | People at gate 00–06 | Full-text | HIGH+ alerts | Nearest telemetry | Inventory |
-|---|---|---|---|---|---|---|---|---|
-| 20,000 | 4,575 frames/s | 15.6 MB | 1.1 ms | 0.7 ms | 8.2 ms | 0.4 ms | 0.06 ms | 22 ms |
-| 100,000 | 3,161 frames/s | 80.2 MB | 0.6 ms | 0.6 ms | 42 ms | 0.4 ms | 0.04 ms | 128 ms |
-
-(median query latency; 100,000 frames ≈ 3.5 days of footage at one frame every 3 s)
-
-Structured queries stay flat because they are index range scans. Full-text and the whole-footage inventory grow linearly; the fixes for production are time-partitioned FTS tables and incrementally maintained counts.
-
-## Defects found by testing and smoke runs
-
-| Defect | Found by | Fix |
+| Time | Episode | Expected alerts |
 |---|---|---|
-| "Blue Ford F150 entered twice today" fired when the truck *left* at 09:40 (time-gap visit splitting under sparse patrol sampling) | Demo-day run | Visits follow observed enter/exit behaviour (`test_sparse_patrol_sightings_without_exit_stay_one_visit`) |
-| "no vehicles or people" detected people | Parser smoke test | Negation carries across coordinated lists |
-| A rule folded into a correlated alert re-fired on the next frame | Code review of the engine | Cooldown filter → record all fresh alerts → correlate |
-| "Person in dark hoodie near a truck" gave the truck the colour "dark" | Parser smoke test | Colour read only from the two words before the noun |
-| "At 23:10 a Camry" read 10 as a count | Parser smoke test | Counts ignore digits following ":" |
-| "Drone docked and charging" detected a drone object | Demo-day run | Removed "drone" from the object lexicon |
-| "Was the gate left open?" routed to entity history ("left") | Agent smoke test | `left` not followed by `open`; infrastructure subjects use detection search |
+| 00:01-00:09 | Person in dark hoodie loitering at the main gate | LOITERING, AFTER_HOURS_PERSON |
+| 01:30, 05:40, 19:30 | Fox, deer, dog | none |
+| 02:14-03:02 | Masked intruder climbs the back fence, forces the warehouse door, climbs back out; drone follows, GPS drifts, leaves the geofence | INTRUSION x3, RESTRICTED_ZONE, AFTER_HOURS_PERSON, ACCESS_OPEN, GPS_DRIFT, GEOFENCE |
+| 03:07-03:40 | Extended sortie drains the battery | BATTERY_LOW, BATTERY_CRITICAL |
+| 05:50 | Uniformed guard closes the door | none (staff) |
+| 07:50 | Property manager's white Toyota Camry | none (known vehicle) |
+| 09:14-09:42 | Blue Ford F150, first visit | none |
+| 10:05-10:17 | Courier delivers a package, collected after 12 minutes | none (below 15 min) |
+| 11:00-11:25 | Blue Chevrolet Silverado (decoy for re-identification) | none |
+| 12:30 | Workers and forklift in the restricted warehouse | none (business hours) |
+| 13:00 | Inspection pass at 8 m | LOW_ALTITUDE |
+| 14:30-15:20 | Bag left at the main gate | UNATTENDED_OBJECT |
+| 15:10 | Wind gusts | HIGH_WIND |
+| 15:40 | Visitor waits 2 minutes at the gate | none (below 5 min) |
+| 16:45-17:10 | Same blue Ford F150 returns | REPEAT_VEHICLE |
+| 22:45 | Main gate left open | ACCESS_OPEN |
+| 23:10-23:25 | Black SUV, two people try the garage door handles | AFTER_HOURS_VEHICLE, AFTER_HOURS_PERSON, INTRUSION |
+
+## How to reproduce
+
+```bash
+python make.py setup
+python make.py test                 # unit + scenario + edge-case tests
+python make.py eval                 # writes docs/results/eval_scenario_rules.*, retrieval_eval.*, ablation.*,
+                                    # qa_context_eval.*, qa_heldout_eval.* (and paraphrase_eval.* if the
+                                    # reworded captions exist)
+python make.py benchmark            # docs/results/benchmark.* and benchmark_*.png (about 2 minutes)
+python make.py eval-gemini          # with GEMINI_API_KEY: gemini_models.json, vlm_check.*, Gemini rows in
+                                    # retrieval_eval, eval_scenario_gemini.*, paraphrase_eval.*, qa_*_eval.*
+```
+
+Single experiments: `python -m drone_security eval --seeds 10`, `eval-retrieval [--gemini]`, `ablation`,
+`eval-qa [--gemini] [--heldout]`, `vlm`, `eval-paraphrase [--make] [--gemini]`, `benchmark --frames 10000`.
+
+## Latest results
+
+Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, each with a provenance header).
+
+| Experiment | Result |
+|---|---|
+| Test suite | 128 passed |
+| Scenario, rule parser, 10 seeds | alert P 1.00 / R 1.00 / F1 1.00; detection P 0.991 / R 1.00; re-ID F1 1.00; 19 alerts for 20 incidents per seed |
+| Re-ID ablation (25% attributes dropped) | F1 0.917 vs 0.430 for the v1 exact-signature matcher |
+| Noise control | 19 alerts/day with cooldown + correlation, 21 with cooldown only, 67.4 with neither; recall 1.00 in all three |
+| Retrieval (22 queries, nDCG@10) | hybrid 0.846, keyword 0.822, TF-IDF 0.768 |
+| Offline Q&A | dev set 20/20 (tuned on it); held-out 7/12; 0 answers with made-up citations |
+| Context size, one day | 1,622 tokens hierarchical vs 21,763 naive |
+| Benchmark, 200k frames | 4,976 frames/s ingest, 96.5 MB, indexed queries < 1 ms, hybrid text 7.2 ms |
+| Gemini experiments | GEMINI_TESTING_ROW |
+
+## Known gaps
+
+* Q&A grading uses regular expressions on small question sets; it can miss a correct answer phrased
+  unexpectedly (the per-question answers are stored in the JSON files for manual review).
+* The scripted day reuses one paraphrase pool across seeds, so seed-to-seed variance is small.
+* The VLM check uses seven images; it shows the path works on real photos, not a statistically strong
+  accuracy estimate.

@@ -7,12 +7,15 @@
     python make.py eval        offline experiments: ground-truth scoring, retrieval, Q&A -> docs/results
     python make.py eval-gemini Gemini experiments (needs GEMINI_API_KEY): models, VLM, retrieval, Q&A
     python make.py benchmark   scalability benchmark (10k / 50k / 100k / 200k frames) -> docs/results
+    python make.py report      docs/REPORT.md -> docs/REPORT.pdf (needs Edge, Chrome or Chromium)
 """
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -64,6 +67,57 @@ def evaluate_gemini() -> None:
     app("eval-qa", "--gemini", "--heldout", "--pause", "1")
 
 
+REPORT_CSS = """
+@page { size: A4; margin: 16mm 15mm; }
+body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #1a1a1a; }
+h1 { font-size: 18pt; border-bottom: 2px solid #333; padding-bottom: 4px; }
+h2 { font-size: 13.5pt; margin-top: 18px; border-bottom: 1px solid #bbb; padding-bottom: 2px; page-break-after: avoid; }
+h3 { font-size: 11pt; margin-top: 14px; page-break-after: avoid; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 8.5pt; page-break-inside: avoid; }
+th, td { border: 1px solid #c8c8c8; padding: 3px 5px; text-align: left; vertical-align: top; }
+th { background: #f0f0f0; }
+code, pre { font-family: Consolas, monospace; font-size: 8.5pt; background: #f6f6f6; }
+pre { padding: 6px; white-space: pre-wrap; page-break-inside: avoid; }
+blockquote { border-left: 3px solid #999; margin: 6px 0; padding: 2px 10px; color: #333; background: #fafafa; }
+img { max-width: 100%; max-height: 215mm; display: block; margin: 8px auto; page-break-inside: avoid; }
+"""
+
+
+def find_browser() -> str | None:
+    """Edge or Chrome/Chromium, used headless to print HTML to PDF."""
+    candidates = [shutil.which(name) for name in ("msedge", "chrome", "google-chrome", "chromium", "chromium-browser")]
+    candidates += [r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                   r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]
+    return next((c for c in candidates if c and Path(c).exists()), None)
+
+
+def report() -> None:
+    try:
+        from markdown_it import MarkdownIt  # installed with rich, i.e. inside the project's .venv
+    except ImportError:
+        if Path(sys.executable).resolve() == Path(venv_python()).resolve():
+            raise
+        sh(venv_python(), str(ROOT / "make.py"), "report")  # re-run inside the venv
+        return
+
+    source = ROOT / "docs" / "REPORT.md"
+    target = ROOT / "docs" / "REPORT.pdf"
+    body = MarkdownIt("commonmark").enable("table").render(source.read_text(encoding="utf-8"))
+    base = (ROOT / "docs").as_uri() + "/"  # so relative image paths resolve from docs/
+    page = (f'<!doctype html><html><head><meta charset="utf-8"><base href="{base}">'
+            f"<style>{REPORT_CSS}</style></head><body>{body}</body></html>")
+    browser = find_browser()
+    if browser is None:
+        sys.exit("No Edge/Chrome/Chromium found to print the PDF; open docs/REPORT.md in any Markdown viewer instead.")
+    with tempfile.TemporaryDirectory() as tmp:
+        html = Path(tmp) / "report.html"
+        html.write_text(page, encoding="utf-8")
+        sh(browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer", "--print-to-pdf-no-header",
+           f"--user-data-dir={tmp}", f"--print-to-pdf={target}", html.as_uri())
+    print(f"wrote {target}")
+
+
 TARGETS = {
     "setup": setup,
     "run": lambda: app("run"),
@@ -72,6 +126,7 @@ TARGETS = {
     "eval": evaluate_offline,
     "eval-gemini": evaluate_gemini,
     "benchmark": lambda: app("benchmark"),
+    "report": report,
 }
 
 
