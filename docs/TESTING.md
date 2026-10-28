@@ -88,7 +88,7 @@ Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, e
 | Retrieval (22 queries, nDCG@10) | hybrid 0.846, keyword 0.822, TF-IDF 0.768 |
 | Offline Q&A | dev set 20/20 (tuned on it); held-out 7/12; 0 answers with made-up citations |
 | Context size, one day | 1,622 tokens hierarchical vs 21,763 naive |
-| Benchmark, 200k frames | 4,976 frames/s ingest, 96.5 MB, indexed queries < 1 ms, hybrid text 7.2 ms |
+| Benchmark, 200k frames | 4,976 frames/s ingest, 96.5 MB, indexed queries < 1 ms, hybrid text 7.2 ms (mains power; the same code on battery ingests about 2.4x slower) |
 | Gemini experiments | not run (no API key available during development); covered by fake-client tests; `python make.py eval-gemini` produces the result files |
 
 ## Known gaps

@@ -97,8 +97,8 @@ held-out wording, context experiment). The model is chosen by listing what the k
 | Ingest at 200,000 frames (310 days) | 4,976 frames/s; indexed queries < 1 ms; DB 96.5 MB | same |
 | Gemini experiments (VLM on 7 real photos, embeddings, LLM perception, context experiment) | not run: no API key was available during development; `python make.py eval-gemini` produces them | [REPORT 5.6](docs/REPORT.md) |
 
-The 1.00 scores are on captions the parser was developed against; the held-out, ablation and paraphrase
-numbers are the ones that say how it generalises. See the report, sections 5-6.
+The 1.00 scores are on captions the parser was developed against; the held-out and ablation numbers are
+the ones that say how it generalises. See the report, sections 5-6.
 
 ## Architecture
 

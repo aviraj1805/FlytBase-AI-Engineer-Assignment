@@ -82,8 +82,8 @@ python make.py test             # show "128 passed" if you want it on screen
 
 > "Five different seeds of the same day: all 20 incidents alerted, no false alerts, re-identification
 > correct. I want to be honest about this number: the parser was built against these captions, so this is
-> a development score. The report has the tests that are harder: held-out questions, degraded perception
-> and captions reworded by Gemini."
+> a development score. The report has the tests that are harder: held-out questions the system was never
+> tuned on, and re-identification when perception loses detail."
 
 ### Scene 8: scale (6:40-7:20), then show benchmark_context.png
 

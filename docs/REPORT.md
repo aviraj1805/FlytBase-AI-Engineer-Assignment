@@ -208,7 +208,10 @@ SQLite file on a laptop SSD (Intel Core, Windows 11, Python 3.10).
 | 100,000 | 155 | 5,202 | 48.2 MB | 0.57 ms | 0.08 ms | 0.11 ms | 3.84 ms | 2.35 ms |
 | 200,000 | 310 | 4,976 | 96.5 MB | 0.58 ms | 0.08 ms | 0.09 ms | 7.20 ms | 7.30 ms |
 
-(Median of 30 repeats; p95 in the results file.) Indexed lookups are flat. Full-text and entity-history
+(Median of 30 repeats; p95 in the results file.) **Throughput depends on the laptop's power state:** the same
+commit ingested 10,000 frames at 6,310 frames/s on the run above and at 2,541 frames/s later the same morning on
+battery (CPU held at 2.1 GHz). Ratios and latency trends are the meaningful part; absolute numbers are this
+laptop's. Indexed lookups are flat. Full-text and entity-history
 latency grow with the number of matching rows (the same intruder appears every simulated day) but stay under
 8 ms. **The first 200k run found three real scaling bugs**, fixed before these numbers: entity rows were
 re-serialising every past visit on each sighting (ingest fell to 2,470 frames/s), the one-day summary query
@@ -294,8 +297,8 @@ What I reviewed and decided myself, and what I need to be able to defend in an i
   judgement of what a correct system should do; the metrics are only as meaningful as these choices.
 * **Thresholds and severities** in `config/rules.yaml` and `config/property.json` (loiter 5 min, unattended
   15 min, battery 25/15 %, cooldowns) are reasonable defaults, not tuned on real data.
-* **Honesty of the results.** The 1.00 scores are development-set numbers; the held-out, ablation and
-  paraphrase results are the ones that generalise, and I report them as measured.
+* **Honesty of the results.** The 1.00 scores are development-set numbers; the held-out and ablation
+  results are the ones that say how it generalises, and I report them as measured.
 * **The re-identification trade-off** (refusing to call a vague "blue pickup" the F150) is a product decision:
   fewer false identity claims, some missed repeat visits.
 * **Image licences** (`data/images/ATTRIBUTION.md`) and **key handling** (environment variable or gitignored
