@@ -71,6 +71,9 @@ class OfflineAnalyst:
         subject = self._subject(q)
         zone = zone_in(q)
 
+        # Intents are checked in priority order and the first match wins: questions the footage cannot answer,
+        # then specific intents (briefing, inventory, drone, identity), then broad ones (alerts, summaries),
+        # then object/zone lookups, and finally free-text search.
         unrecorded = next((what for pattern, what in _UNRECORDED.items() if re.search(pattern, q)), None)
         if unrecorded:
             text = (f"{NOT_ENOUGH_EVIDENCE} The frame descriptions never record {unrecorded}, so I cannot tell from "

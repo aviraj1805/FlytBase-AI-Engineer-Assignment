@@ -194,7 +194,7 @@ The held-out score is the honest one: keyword routing does not generalise. Of th
 abstentions ("when did the drone dock after the incident", "which vehicle was parked in the late morning",
 "which zones are on the property") and two are wrong-but-cited ("did the gardener trigger alerts" lists all
 19 alerts; "what happened in the hour after the gate was left open" needs relative-time reasoning). This is
-the gap the LLM agent fills; its results are in section 5.6.
+the gap the LLM agent is meant to fill; see section 5.6.
 
 ### 5.5 Scale
 
@@ -214,9 +214,28 @@ latency grow with the number of matching rows (the same intruder appears every s
 re-serialising every past visit on each sighting (ingest fell to 2,470 frames/s), the one-day summary query
 had no indexable lower bound (9 ms), and hybrid search counted every table on each query (66 ms).
 
-### 5.6 Gemini results
+### 5.6 Gemini paths
 
-GEMINI_RESULTS_SECTION
+**Not run against the live API.** No Gemini API key was available in the development environment, so this
+section has no Gemini numbers, and none are reported anywhere else either. What exists and is verified without
+the network:
+
+* Model selection from the live model list (`python -m drone_security models`), retries with the server's
+  suggested delay, and token accounting per purpose: `tests/test_gemini.py`.
+* LLM perception (schema-validated output normalised onto the parser vocabulary, 40 captions per request,
+  cached, parser fallback per frame) and the VLM path for real images, with a scoring harness and hand labels
+  for seven Wikimedia Commons photos: `tests/test_gemini.py`, `tests/test_evaluation.py` (fake VLM).
+* The LangChain + Gemini agent loop and the citation check: `tests/test_agent.py` (scripted fake chat model).
+* The schemas are accepted by the installed `google-genai` SDK and the agent builds with
+  `ChatGoogleGenerativeAI`; no request was sent.
+
+`python make.py eval-gemini` runs every Gemini experiment and writes `gemini_models.json`, `vlm_check.md`,
+the Gemini rows of `retrieval_eval.md`, `eval_scenario_gemini.md`, `paraphrase_eval.md` and the naive /
+hierarchical / tools-only / summaries conditions of `qa_context_eval.md` and `qa_heldout_eval.md`.
+The questions those runs answer, stated as hypotheses rather than results: do Gemini embeddings recover the
+two paraphrase queries that every offline method misses (5.3); does the LLM analyzer keep alert recall on
+reworded captions where the parser degrades; and does hierarchical memory + tools match the naive prompt's
+accuracy at a fraction of its tokens and beat the offline router on the held-out questions (5.4).
 
 ## 6. Error analysis: what the failures teach
 
@@ -232,7 +251,7 @@ GEMINI_RESULTS_SECTION
 4. **Deterministic routing does not generalise** (7/12 held-out). The offline analyst is a safety net that
    abstains rather than guesses; open-ended Q&A needs the LLM agent.
 5. **Context is cheap to bound, expensive to ignore.** A naive prompt is linear in footage length; the
-   hierarchy is flat. The interesting question is answer quality per token, which section 5.6 measures.
+   hierarchy is flat. The open question is answer quality per token, which the Gemini context experiment (section 5.6) measures.
 
 ## 7. Testing
 

@@ -44,8 +44,9 @@ python make.py eval         # offline experiments -> docs/results
 python make.py benchmark    # 10k / 50k / 100k / 200k frames -> docs/results
 ```
 
-`make <target>` does the same on Linux/macOS (the Makefile calls `make.py`). After `setup`, the CLI is
-`python -m drone_security <command>` with `src` on the path (or `.venv` activated):
+`make <target>` does the same on Linux/macOS (the Makefile calls `make.py`). After `setup`, activate the
+environment (`.venv\Scripts\activate` on Windows, `source .venv/bin/activate` elsewhere) and use the CLI,
+`python -m drone_security <command>`:
 
 ```bash
 python -m drone_security query --label truck                  # "show all truck events"
@@ -55,6 +56,7 @@ python -m drone_security ask "What happened between 23:00 and 23:30?"
 python -m drone_security chat                                 # follow-up questions keep context
 python -m drone_security summary                              # one sentence + daily briefing
 python -m drone_security run --feed data/scenarios/sample_frames.txt   # the brief's text format
+python -m drone_security run --speed 60 --explain             # replay as a live feed, 1 footage minute per second
 ```
 
 ### Gemini (optional)
@@ -93,7 +95,7 @@ held-out wording, context experiment). The model is chosen by listing what the k
 | Offline Q&A, held-out questions | 7/12 correct, 0 made-up citations (20/20 on the tuned dev set) | [qa_heldout_eval.md](docs/results/qa_heldout_eval.md) |
 | Agent context at 200,000 frames | 2,442 tokens (hierarchical) vs 6,862,855 (every frame) | [benchmark.md](docs/results/benchmark.md) |
 | Ingest at 200,000 frames (310 days) | 4,976 frames/s; indexed queries < 1 ms; DB 96.5 MB | same |
-| Gemini experiments | GEMINI_README_ROW | |
+| Gemini experiments (VLM on 7 real photos, embeddings, LLM perception, context experiment) | not run: no API key was available during development; `python make.py eval-gemini` produces them | [REPORT 5.6](docs/REPORT.md) |
 
 The 1.00 scores are on captions the parser was developed against; the held-out, ablation and paraphrase
 numbers are the ones that say how it generalises. See the report, sections 5-6.

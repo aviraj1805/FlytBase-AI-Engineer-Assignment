@@ -89,7 +89,7 @@ Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, e
 | Offline Q&A | dev set 20/20 (tuned on it); held-out 7/12; 0 answers with made-up citations |
 | Context size, one day | 1,622 tokens hierarchical vs 21,763 naive |
 | Benchmark, 200k frames | 4,976 frames/s ingest, 96.5 MB, indexed queries < 1 ms, hybrid text 7.2 ms |
-| Gemini experiments | GEMINI_TESTING_ROW |
+| Gemini experiments | not run (no API key available during development); covered by fake-client tests; `python make.py eval-gemini` produces the result files |
 
 ## Known gaps
 
