@@ -119,10 +119,6 @@ def write_day(day: GeneratedDay, out_dir: str | Path = DEFAULT_DAY_DIR) -> tuple
     return frames_path, truth_path
 
 
-def load_ground_truth(path: str | Path = DEFAULT_DAY_DIR / "ground_truth.json") -> dict:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
-
-
 # ----------------------------------------------------------------------------------- slots
 def _patrol_slots(script: dict, day: date, cadence: timedelta, docks: list, beats: list[_Slot],
                   rng: random.Random) -> list[_Slot]:
@@ -253,5 +249,5 @@ def _at(day: date, hhmm: str) -> datetime:
     return datetime.combine(day, datetime.strptime(hhmm, fmt).time())
 
 
-__all__ = ["GeneratedDay", "generate_day", "generate_frames", "load_script", "load_ground_truth", "write_day",
+__all__ = ["GeneratedDay", "generate_day", "generate_frames", "load_script", "write_day",
            "DEFAULT_SCRIPT", "DEFAULT_DAY_DIR"]

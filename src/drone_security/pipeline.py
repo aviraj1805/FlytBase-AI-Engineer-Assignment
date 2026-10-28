@@ -21,7 +21,7 @@ from .indexing import FrameIndex
 from .ingest import FeedSanitizer, IngestStats
 from .memory import HierarchicalMemory
 from .models import Detection, EventLog, Frame, FrameResult
-from .perception import RuleBasedAnalyzer
+from .perception import FrameAnalyzer, RuleBasedAnalyzer
 from .rules import RuleContext, RuleEngine
 from .tracking import EntityTracker, TrackUpdate
 
@@ -49,7 +49,7 @@ class SecurityPipeline:
         self,
         config: PropertyConfig,
         *,
-        analyzer=None,
+        analyzer: Optional[FrameAnalyzer] = None,
         index: Optional[FrameIndex] = None,
         tracker: Optional[EntityTracker] = None,
         rules: Optional[RuleEngine] = None,

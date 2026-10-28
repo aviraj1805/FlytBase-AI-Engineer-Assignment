@@ -143,13 +143,6 @@ class Alert:
     alert_id: Optional[int] = None
     dedupe_key: str = field(default="", repr=False, compare=False)
 
-    def to_dict(self) -> dict[str, Any]:
-        data = asdict(self)
-        data.pop("dedupe_key")
-        data["severity"] = self.severity.name
-        data["timestamp"] = self.timestamp.isoformat(sep=" ")
-        return data
-
 
 @dataclass
 class FrameResult:
