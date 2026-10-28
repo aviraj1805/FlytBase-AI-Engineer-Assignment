@@ -30,6 +30,74 @@ Not enough evidence in the footage to answer that. The frame descriptions never 
 | [docs/results/](docs/results) | Raw outputs of every experiment (JSON + Markdown + plots) |
 | [docs/AUDIT.md](docs/AUDIT.md) | Audit of the first version and the upgrade plan |
 
+## Web UI (the fastest way to see everything)
+
+```bash
+make ui                     # or: python make.py ui   (or, after setup: python run_ui.py)
+```
+
+That one command creates the virtual environment if it is missing, processes the scenario day into
+`data/runs/ui.db`, and opens **http://localhost:8000**. There is no npm and no build step, and it works fully
+offline. Options: `python make.py ui --port 8001 --no-browser`. The top-right badge shows **Offline mode**,
+or **Gemini: *model name*** when `GEMINI_API_KEY` is set (environment or `.env`). With a key, the agent chat
+and the "Rewrite briefing with Gemini" button use Gemini; alerts stay deterministic. Press **Demo mode**
+(or `D`) for a numbered walkthrough that drives every screen in the order of
+[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+
+| Screen (key) | What it shows | Assignment requirement |
+|---|---|---|
+| Mission Control (1) | Live replay: play/pause/speed, scrubber with alert markers, telemetry, property map (zones, drone GPS, objects), current frame + detections | Process telemetry + frames; real-time alerts |
+| Live Alerts (2) | Alerts as the replay raises them: severity, rule, time, zone, explanation, action, evidence frames; filters; acknowledge | Real-time alerts from predefined rules |
+| Event Log (3) | Searchable, sortable log ("Blue Ford F150 spotted at garage, 09:16.") with confidence; click a row to open the frame | Identify and log objects/events |
+| Frame Index (4) | Queries by time, object, zone, entity, free text (FTS5 + vectors); hourly histogram; **the SQL SQLite actually ran**; presets | Frame-by-frame indexing |
+| Agent Chat (5) | Streamed answers, tool calls, clickable [fN] citations, citation check, "not enough evidence" | Bonus: Q&A agent |
+| Entity Tracker (6) | Each re-identified entity: visits on a 24 h bar, match confidence, which traits matched (with weights), every sighting | Tracking / re-identification |
+| Summaries (7) | One-sentence summary, daily briefing, recommendations, day → hour → 10-minute → frames tree | Bonus: video summarisation |
+| Context Manager (8) | What the agent's prompt holds (sections + tokens, adjustable budget) vs pasting every frame; recorded experiments | Context management for long footage |
+| QA / Tests (9) | Runs the pytest suite on the server; pass/fail per group with test names | Testing |
+| Evaluation (0) | Charts from `docs/results/*.json` (P/R/F1 vs ground truth, reworded captions, re-ID ablation, noise control, retrieval, benchmark) + "Run benchmark" | Evaluation, scalability |
+| Architecture | The diagrams in `docs/diagrams` with a component table | Design |
+
+Every number on screen comes from the backend: the processed day, a live pipeline (the replay), or the saved
+experiment outputs in `docs/results`. Nothing is mocked.
+
+### How the UI is built
+
+```
+browser: src/drone_security/web/static/  (index.html, css/app.css, js/*.js ES modules, Chart.js 4.4.1 vendored)
+   │  JSON  /api/status /api/alerts /api/events /api/frames/{id} /api/index/query /api/entities /api/summaries
+   │        /api/context /api/results /api/tests/run /api/benchmark          (full list: /api/docs)
+   │  SSE   /api/replay/stream?start=N&speed=S   a fresh SecurityPipeline per connection, one frame at a time
+   │  SSE   POST /api/chat                       SecurityAnalyst.ask, then tool calls + answer + citation check
+   ▼
+FastAPI: src/drone_security/web/api.py (routes), state.py (processed day, agent), replay.py (live stream)
+   ▼
+the existing modules: pipeline, index, tracker, rules, retrieval, memory, agent, analysis, evaluation
+```
+
+* **Why plain HTML/JS instead of React:** no `npm install` means a fresh clone runs offline with one Python
+  command, and every file can be read without a toolchain.
+* **Why the replay re-runs the pipeline:** alerts on screen are raised by the rule engine at that moment.
+  Seeking to a position re-processes the earlier frames without delays (the whole day takes about 0.3 s)
+  because the tracker and cooldowns depend on history.
+* **Honest limits:** the agent computes its answer first, then the server streams it in chunks (display
+  streaming, not model token streaming). Objects are drawn at their detected zone, because captions give a
+  zone, not coordinates.
+* **Checks:** `tests/test_web_api.py` covers every endpoint; `python make.py ui-check` opens every screen in
+  headless Chromium, fails on console errors, runs the main flows (replay raises an alert, a query returns
+  frames, the agent answers with citations, the test suite runs) and saves the screenshots below.
+
+### Screenshots
+
+| | |
+|---|---|
+| ![Mission Control](docs/screenshots/01_mission_control.png) Mission Control: the 02:14 intrusion | ![Live alerts](docs/screenshots/02_live_alerts.png) Live alerts with explanation and evidence |
+| ![Frame index](docs/screenshots/04_frame_index_trucks.png) "Show all truck events" with the SQL that ran | ![Agent chat](docs/screenshots/07_agent_chat.png) Agent chat with tool calls and checked citations |
+| ![Entity tracker](docs/screenshots/08_entity_tracker.png) Entity tracker: why the F150 was matched | ![Context](docs/screenshots/10_context_manager.png) Context manager vs the naive prompt |
+| ![Summaries](docs/screenshots/09_summaries.png) Hierarchical summaries | ![Evaluation](docs/screenshots/12_evaluation.png) Evaluation from saved results |
+
+All screenshots: [docs/screenshots](docs/screenshots).
+
 ## Quick start
 
 Python 3.10+. Works offline; no API key needed.
@@ -37,7 +105,7 @@ Python 3.10+. Works offline; no API key needed.
 ```bash
 git clone <repo-url> && cd <repo>
 python make.py setup        # creates .venv and installs the package + test deps
-python make.py test         # 130 tests
+python make.py test         # 154 tests
 python make.py run          # process the scripted day: live logs, alerts, summary
 python make.py demo         # the 8-scene walkthrough used for the demo video
 python make.py eval         # offline experiments -> docs/results
@@ -126,7 +194,9 @@ src/drone_security/
   demo.py, cli.py    demo scenes and the command line
 config/              property.json (zones, hours, known vehicles), rules.yaml
 data/                scenario script + generated day, real images (+ licences), eval sets
-tests/               130 tests
+tests/               154 tests (incl. web API and the brief's own examples)
+run_ui.py            starts the web UI (src/drone_security/web/)
+scripts/ui_check.py  headless browser check of every screen -> docs/screenshots
 ```
 
 Key design decisions (details and alternatives in the report, section 4):
@@ -142,7 +212,12 @@ Key design decisions (details and alternatives in the report, section 4):
 
 This project was built with **Claude Code** (Anthropic) working from the assignment text: it audited the first
 version, planned the upgrade, wrote the code, tests, experiments and documents, ran every command, and fixed
-what the measurements exposed. **Gemini** is part of the product (perception, Q&A, embeddings). What I
+what the measurements exposed. Claude Code also generated the whole web UI (FastAPI layer, frontend, API
+tests, the headless screen check and the screenshots). While wiring the chat it found that the offline
+analyst answered "Did the same truck enter twice?" with a list of sightings; it fixed that with a test. What I
+still need to review in the UI: that each help tooltip states the requirement correctly, the map layout of
+the zones, the wording of the demo-mode talking points, and that I can explain the replay design (re-running
+the pipeline on seek) and the SSE endpoints in an interview. **Gemini** is part of the product (perception, Q&A, embeddings). What I
 reviewed and own, especially the ground-truth design, thresholds, and the honesty of the reported numbers, is
 listed in the report, section 10.
 
@@ -154,4 +229,5 @@ listed in the report, section 10.
 * The offline Q&A router is keyword-based and generalises poorly (7/12 held-out); open-ended questions need
   the Gemini agent.
 * Q&A grading is regex-based on small question sets.
-* No live video decoding, notification delivery or UI; the CLI is the interface.
+* No live video decoding or notification delivery. The web UI is a single-operator demo console (no login;
+  alert acknowledgements live in the browser session only).

@@ -1,6 +1,6 @@
 # Testing
 
-Two layers: **automated tests** (`python make.py test`, 130 tests, about 1 minute, no network) check that
+Two layers: **automated tests** (`python make.py test`, 154 tests, about 10-60 seconds, no network) check that
 each component does what it claims, and **experiments** (`python make.py eval`, `benchmark`, `eval-gemini`)
 measure how well the whole system works against ground truth. Experiments write their raw output to
 `docs/results/`, so every number in the README and report can be traced to a file and a command.
@@ -33,7 +33,18 @@ deterministic and free, and the live Gemini behaviour is measured separately by 
 | test_retrieval_memory.py | 8 | TF-IDF matches spelling variants; RRF; hybrid vs keyword; filters; summaries at every level with citations; hour summary cites its alerts; context within budget and far smaller than the whole video; live and rebuilt memory agree |
 | test_agent.py | 14 | inventory, truck events, visit count + pronoun follow-up, Silverado vs F150, alert questions, time windows, drone status, briefing and summary, **abstention** on unanswerable questions, every offline citation points at a retrieved frame, exactly five tools, LangChain loop with a scripted fake model, made-up citations flagged, LLM failure degrades to the offline answer |
 | test_gemini.py | 13 | newest stable Flash model chosen from a listed set; override; key from `.env`; offline flag wins; 429 retried; output normalised to the parser vocabulary; captions batched and cached; API failure falls back to the parser; VLM returns caption + objects; usage accounting; real client needs a key; one embedding per text; daily-quota errors fail fast |
+| test_web_api.py | 20 | every UI endpoint: status and Gemini badge (stubbed client), property zones, replay timeline markers, **live SSE replay from any position** (02:14 intrusion raised by the pipeline), alert filters, event log with confidence, frame detail, index queries with the captured SQL, bad times rejected, chat streaming with tool calls + citation check + follow-up, abstention, entity match reasons, summaries at every level, context budget, saved results, small live benchmark, static files |
+| test_brief_examples.py | 3 | the brief's own examples: **truck logged correctly**, **alert triggered at midnight**, the same truck entering twice raises a repeat-vehicle alert |
 | test_evaluation.py | 10 | regex grading, ranking metrics, ground-truth relevance, offline Q&A never cites unseen frames, VLM check scoring with a fake VLM, Gemini summarizer wiring, attribute dropout, v1 tracker baseline, paraphrase experiment, benchmark smoke |
+
+## Web UI checks
+
+`python make.py ui-check` (`scripts/ui_check.py`) starts the UI server, opens each of the 11 screens and demo
+mode in headless Chromium (Playwright), fails on any console error or missing element, and runs the main
+flows: the replay raises the 00:01 alert live, the critical marker jumps to 02:14, an alert is acknowledged,
+the truck and main-gate presets return frames and show their SQL, the frame drawer opens, the agent answers
+two questions with clickable citations, the test suite runs from the UI and passes. Screenshots go to
+`docs/screenshots/`. Latest run: 14/14 checks passed.
 
 ## Scenarios
 
@@ -83,7 +94,7 @@ Generated on 2026-10-28 with the commands above (raw files in `docs/results/`, e
 
 | Experiment | Result |
 |---|---|
-| Test suite | 130 passed |
+| Test suite | 154 passed |
 | Scenario, rule parser, 10 seeds | alert P 1.00 / R 1.00 / F1 1.00; detection P 0.991 / R 1.00; re-ID F1 1.00; 19 alerts for 20 incidents per seed |
 | Re-ID ablation (25% attributes dropped) | F1 0.917 vs 0.430 for the v1 exact-signature matcher |
 | Noise control | 19 alerts/day with cooldown + correlation, 21 with cooldown only, 67.4 with neither; recall 1.00 in all three |
