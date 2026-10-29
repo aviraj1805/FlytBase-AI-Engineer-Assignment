@@ -1,7 +1,7 @@
-"""Scene-by-scene demo for the recorded walkthrough (`python -m drone_security demo`).
+"""Scene-by-scene walkthrough of the system in the terminal (`python -m drone_security demo`).
 
-Each scene prints a banner that matches docs/DEMO_SCRIPT.md, so the voiceover can follow the
-console. `--pause` waits for Enter between scenes; `--fast` skips the streaming delay.
+Each scene prints a numbered banner. `--pause` waits for Enter between scenes; `--fast` skips the
+streaming delay.
 Everything runs offline; with a Gemini key the Q&A scene uses the Gemini agent instead.
 """
 from __future__ import annotations

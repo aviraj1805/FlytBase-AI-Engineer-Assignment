@@ -3,7 +3,7 @@
     python make.py setup       create .venv and install the project + test dependencies
     python make.py run         process the demo day: live logs, alerts, summary
     python make.py test        run the pytest suite
-    python make.py demo        scene-by-scene demo for the recorded video (offline)
+    python make.py demo        scene-by-scene walkthrough in the terminal (offline)
     python make.py eval        offline experiments: ground-truth scoring, retrieval, Q&A -> docs/results
     python make.py eval-gemini Gemini experiments (needs GEMINI_API_KEY): models, VLM, retrieval, Q&A
     python make.py benchmark   scalability benchmark (10k / 50k / 100k / 200k frames) -> docs/results

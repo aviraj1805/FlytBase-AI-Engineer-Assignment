@@ -62,5 +62,5 @@ scored automatically; unanswerable questions must abstain.
 
 ## Out of scope (prototype)
 
-Licence-plate and face recognition, multi-drone coordination, live video decoding, a web UI,
-notification delivery (SMS/push). The design leaves room for each (see REPORT, "With more time").
+Licence-plate and face recognition, multi-drone coordination, live video decoding, notification
+delivery (SMS/push), multi-user access to the web UI (it is a single-operator console). The design leaves room for each (see REPORT, "With more time").

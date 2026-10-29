@@ -26,9 +26,7 @@ Not enough evidence in the footage to answer that. The frame descriptions never 
 | [docs/FEATURE_SPEC.md](docs/FEATURE_SPEC.md) | Value and the three key requirements with acceptance criteria |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, data model, diagrams ([docs/diagrams](docs/diagrams)) |
 | [docs/TESTING.md](docs/TESTING.md) | Test strategy, cases, scenarios, how to reproduce, latest results |
-| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Scene-by-scene script for the demo video |
 | [docs/results/](docs/results) | Raw outputs of every experiment (JSON + Markdown + plots) |
-| [docs/AUDIT.md](docs/AUDIT.md) | Audit of the first version and the upgrade plan |
 
 ## Web UI (the fastest way to see everything)
 
@@ -41,8 +39,7 @@ That one command creates the virtual environment if it is missing, processes the
 offline. Options: `python make.py ui --port 8001 --no-browser`. The top-right badge shows **Offline mode**,
 or **Gemini · *model name*** when `GEMINI_API_KEY` is set (environment or `.env`). With a key, the agent
 and the "Rewrite the briefing with Gemini" button use Gemini; alerts stay deterministic. Press **Demo**
-(or `D`) for a numbered walkthrough that drives every view in the order of
-[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+(or `D`) for a 15-step guided tour that drives every view.
 
 The console has five sections (keys `1`–`5`). Each opens on its main view, with the detail one click
 away: sub-tabs, expandable alerts, "Show the SQL", "How I found this". **What am I looking at?** (top right)
@@ -116,7 +113,7 @@ git clone <repo-url> && cd <repo>
 python make.py setup        # creates .venv and installs the package + test deps
 python make.py test         # 154 tests
 python make.py run          # process the scripted day: live logs, alerts, summary
-python make.py demo         # the 8-scene walkthrough used for the demo video
+python make.py demo         # 8-scene walkthrough in the terminal
 python make.py eval         # offline experiments -> docs/results
 python make.py benchmark    # 10k / 50k / 100k / 200k frames -> docs/results
 ```
@@ -224,12 +221,10 @@ version, planned the upgrade, wrote the code, tests, experiments and documents, 
 what the measurements exposed. Claude Code also generated the whole web UI (FastAPI layer, frontend, API
 tests, the headless UI check and the screenshots), and later redesigned it from eleven dense screens into five
 sections that show the essentials first and the detail on demand. While wiring the chat it found that the offline
-analyst answered "Did the same truck enter twice?" with a list of sightings; it fixed that with a test. What I
-still need to review in the UI: that each "What am I looking at?" panel states the requirement correctly, the map layout of
-the zones, the wording of the demo-mode talking points, and that I can explain the replay design (re-running
-the pipeline on seek) and the SSE endpoints in an interview. **Gemini** is part of the product (perception, Q&A, embeddings). What I
-reviewed and own, especially the ground-truth design, thresholds, and the honesty of the reported numbers, is
-listed in the report, section 10.
+analyst answered "Did the same truck enter twice?" with a list of sightings; it fixed that with a test.
+**Gemini** is part of the product (perception, Q&A, embeddings), not a development tool. What I reviewed and
+own, especially the ground-truth design, thresholds, the re-identification trade-off and the honesty of the
+reported numbers, is listed in the report, section 10.
 
 ## Limitations
 

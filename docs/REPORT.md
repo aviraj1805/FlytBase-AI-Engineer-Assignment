@@ -334,7 +334,7 @@ out-of-order and late frames, missing and broken telemetry, malformed records, m
 the brief's text format). Gemini code paths are tested with fake clients (model selection, retries,
 daily-quota fail-fast, per-text embeddings, normalisation, batching, fallbacks) and were then run live (5.6).
 
-## 8. Web UI and demo videos
+## 8. Web UI and guided demo
 
 **Web UI.** `make ui` (or `python make.py ui`) processes the scenario day and serves a browser console at
 http://localhost:8000. It works offline and needs no npm or build step; a badge shows "Offline mode" or
@@ -372,10 +372,9 @@ repeat visits. A test covers the fix, and the dev and held-out Q&A scores did no
 
 ![Search: "show all truck events" with the SQL that ran](screenshots/04_search_trucks.png)
 
-**Demo videos.** Recorded from the web UI (Demo) or from `python make.py demo`, following
-`docs/DEMO_SCRIPT.md` (8 terminal scenes: feed, real-time alerts, rest of day, index queries, agent Q&A,
-summaries, ground-truth scores, scalability; and the UI walkthrough). The video links are listed in
-`SUBMISSION_CHECKLIST.md` once uploaded.
+**Guided demo.** The UI's **Demo** mode (15 steps) drives every view in turn, and `python make.py demo` gives
+the same walkthrough in the terminal (8 scenes: feed, real-time alerts, rest of day, index queries, agent Q&A,
+summaries, ground-truth scores, scalability).
 
 ## 9. With more time
 
@@ -397,7 +396,7 @@ documents, ran every command, and fixed what the runs revealed (the cross-thread
 scaling bugs, parser gaps found by the evaluation). The first version of the repository was also generated
 with Claude Code, and so was the web UI (API layer, frontend, API tests, headless screen check). **Gemini** is part of the product (perception, Q&A, embeddings), not a development tool.
 
-What I reviewed and decided myself, and what I need to be able to defend in an interview:
+What I reviewed and decided myself:
 
 * **The scenario and its ground truth.** The expected incidents, windows and benign traps encode my
   judgement of what a correct system should do; the metrics are only as meaningful as these choices.

@@ -14,7 +14,7 @@
   eval-qa    context experiment: naive prompt vs hierarchical memory vs ablations
   vlm        Gemini VLM on the real images in data/images, scored against hand labels
   benchmark  scalability: 10k / 50k / 100k / 200k frames
-  demo       scene-by-scene walkthrough for the demo video
+  demo       scene-by-scene walkthrough of the system
   models     list the Gemini models this key can use and the ones chosen
 """
 from __future__ import annotations
@@ -541,8 +541,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--repeats", type=int, default=30)
     p.set_defaults(func=cmd_benchmark)
 
-    p = sub.add_parser("demo", help="scene-by-scene walkthrough for the demo video")
-    p.add_argument("--pause", action="store_true", help="wait for Enter between scenes (for recording)")
+    p = sub.add_parser("demo", help="scene-by-scene walkthrough of the system")
+    p.add_argument("--pause", action="store_true", help="wait for Enter between scenes")
     p.add_argument("--fast", action="store_true", help="no streaming delay")
     p.add_argument("--offline", action="store_true", help="offline analyst even if a Gemini key is set")
     p.set_defaults(func=cmd_demo)

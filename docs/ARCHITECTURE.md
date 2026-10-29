@@ -80,6 +80,46 @@ each answer, `check_citations` compares the cited ids with every id the tools re
 in the prompt, and reports unsupported ones. The offline router uses the same tools and abstains unless the
 evidence covers the question.
 
+## Web UI
+
+A thin layer with no core logic of its own: FastAPI routes in `src/drone_security/web/` (`api.py` routes,
+`state.py` shared state, `replay.py` live replay) call the modules above, and a plain HTML + ES-module
+frontend in `web/static/` draws the results (no build step; Chart.js 4.4.1 vendored with its licence). The
+live replay is a Server-Sent Events stream: each connection runs its own `SecurityPipeline` on the scenario
+feed, so alerts on screen are raised by the rule engine at that moment, not read from a list.
+
+| View | Backend |
+|---|---|
+| Live › Mission (replay) | `ingest.read_records`, `ingest.FeedSanitizer`, `pipeline.SecurityPipeline.process` (per frame, live), `config.PropertyConfig` (zones, lat/lon) |
+| Live › Alerts | alerts from the live replay (`FrameResult.alerts`); full day from `FrameIndex.alerts` |
+| Search › Event log | `FrameIndex.events` joined with `detections` (confidence, re-ID confidence) |
+| Frame detail | `FrameIndex.query_frames(frame_ids=…)`, `query_detections`, `alerts`, `events` |
+| Search › Frame index | `FrameIndex.query_detections`, `query_frames`, `retrieval.HybridRetriever.search`; the SQL shown is captured with `sqlite3.set_trace_callback` while the query runs |
+| Ask AI | `agent.SecurityAnalyst.ask` (Gemini agent when a key is set, else offline), `agent.check_citations` |
+| Insights › Identities | `FrameIndex.entities`, `query_detections(entity_id=…)`, `alerts(entity_id=…)`, tracker weights from `tracking.py` |
+| Insights › Briefing | `analysis.summarize_video`, `daily_briefing`, `recommend`, `FrameIndex.summaries(level)` |
+| Insights › Memory | `memory.render_from_index`, `render_naive`, `estimate_tokens`; saved `docs/results/qa_*_eval.json` |
+| Proof › Tests | `pytest --junitxml` in a subprocess, parsed per test file |
+| Proof › Results | saved `docs/results/*.json`; `evaluation.benchmark.run_benchmark` with a small size |
+| Proof › Architecture | `docs/diagrams/*.svg` |
+
+Data shapes (JSON):
+
+* Frame: `{frame_id, ts, description, zone, lat, lon, altitude_m, battery_pct, wind_mps, gps_hdop, mode, distance_from_home_m}`
+* Detection: `{category, label, display_name, color, make, model, action, zone, attributes[], confidence, entity_id, track_confidence}`
+* Alert: `{ts, frame_id, rule_id, severity_name, message, explanation, evidence_frame_ids[], zone, entity_id, recommended_action, related_rules[]}`
+* SSE replay events: `snapshot` (on connect: position, alerts so far), `frame` (frame, detections, logs, alerts), `end`.
+
+Where the backend did not have what a view needed:
+
+* Event logs store no confidence: the API joins the detection row of the same frame and entity.
+* Entities store no "why matched" text: the API returns the identity traits with the tracker's weights, the
+  mean re-ID confidence and the per-sighting confidences.
+* Captions give a zone, not exact object positions: the map draws objects at their detected zone and says so.
+* The agent computes the whole answer before returning it: the UI streams the computed answer in chunks over
+  SSE, with the tool calls sent first (display streaming, not model token streaming).
+* Alert acknowledgement is not part of the backend: it is kept in the browser session only.
+
 ## Extension points
 
 * **New rule:** add an entry to `config/rules.yaml` using existing conditions; a new kind of condition is one

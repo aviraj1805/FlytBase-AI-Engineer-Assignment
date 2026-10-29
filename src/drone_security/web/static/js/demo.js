@@ -1,4 +1,4 @@
-// Demo mode: a numbered walkthrough (matches docs/DEMO_SCRIPT.md, "UI walkthrough") that drives the real views.
+// Demo mode: a numbered walkthrough that drives the real views.
 import { esc } from "./lib.js";
 import { replay, loadTimeline, pause, play, seek, setSpeed } from "./replay.js";
 
@@ -29,7 +29,7 @@ async function ask(question) {
 
 const firstMarker = (severity) => replay.markers.find((m) => m.severity_name === severity);
 
-// [title, what to say, action, element to highlight]
+// [title, explanation, action, element to highlight]
 const STEPS = [
   ["The live console", "One simulated patrol day at a logistics yard: drone telemetry plus a caption for every video frame. Everything on screen comes from the real pipeline running on the server.",
     async () => { await go("#/live", "#tele"); }, "#map-card"],
