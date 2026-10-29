@@ -61,7 +61,7 @@ explains each view and names the requirement it covers.
 
 Clicking any frame reference (`f67`) opens the frame drawer: caption, detections with confidence, alerts it
 raised or supports, telemetry, and "Show in replay". Links from the earlier one-page-per-screen layout
-(`#/mission`, `#/chat`, ...) redirect to the matching view.
+(`#/mission`, `#/chat`, ...) redirect to the matching view
 
 Every number on screen comes from the backend: the processed day, a live pipeline (the replay), or the saved
 experiment outputs in `docs/results`. Nothing is mocked.
